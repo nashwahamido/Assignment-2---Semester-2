@@ -1,7 +1,3 @@
-Before you start working, you need to update the css and js and some html links so that the styles are displayed properly and the html and js files work properly.
-
-
-
 What still needs to be done:
 
 All pages:
