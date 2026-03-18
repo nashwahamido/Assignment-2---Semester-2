@@ -21,16 +21,16 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 
-// ── Person 3's components (Tabs + ItineraryBuilder) ──────────────────────────
+// ── Nashwa's components (Tabs + ItineraryBuilder) ──────────────────────────
 import Tabs from './components/Tabs';
 import ItineraryBuilder from './components/ItineraryBuilder';
 import './styles/tabs.css';
 import './styles/itinerary-builder.css';
 
-// ── Person 1: import ChatBox here when it's ready ────────────────────────────
+// ── Anna: import ChatBox here when it's ready ────────────────────────────
 // import ChatBox from './components/ChatBox';
 
-// ── Person 2: import VotingSystem here when it's ready ───────────────────────
+// ── Neesan: import VotingSystem here when it's ready ───────────────────────
 // import VotingSystem from './components/VotingSystem';
 
 
@@ -115,10 +115,10 @@ if (tabsMount) {
 
 
 // ═════════════════════════════════════════════════════════════════════════════
-// MOUNT 2 — ChatBox into #chat-root   (Person 1)
+// MOUNT 2 — ChatBox into #chat-root   *ANNA*
 // ═════════════════════════════════════════════════════════════════════════════
 //
-// PERSON 1 INSTRUCTIONS:
+// INSTRUCTIONS:
 //   1. Build your component in client/src/components/ChatBox.jsx
 //   2. Uncomment the import at the top of this file:
 //        import ChatBox from './components/ChatBox';
@@ -159,10 +159,10 @@ if (chatMount) {
 
 
 // ═════════════════════════════════════════════════════════════════════════════
-// MOUNT 3 — VotingSystem into #voting-root   (Person 2)
+// MOUNT 3 — VotingSystem into #voting-root   nEESAN
 // ═════════════════════════════════════════════════════════════════════════════
 //
-// PERSON 2 INSTRUCTIONS:
+// INSTRUCTIONS:
 //   1. Build your component in client/src/components/VotingSystem.jsx
 //   2. Uncomment the import at the top of this file:
 //        import VotingSystem from './components/VotingSystem';
@@ -177,7 +177,7 @@ if (votingMount) {
   const userId   = votingMount.dataset.userId;
   const userName = votingMount.dataset.userName;
 
-  // ── WEEK 1: Placeholder shown until Person 2 builds VotingSystem ─────────
+  // ── WEEK 1: Placeholder shown until Neesan builds VotingSystem ─────────
   const VotingPlaceholder = () => (
     <div className="tab-placeholder">
       <div className="placeholder-icon">⭐</div>
