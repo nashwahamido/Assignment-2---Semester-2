@@ -2,10 +2,22 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Itinerary</title>
+  <title>Itinerary — Atlasphere</title>
+  <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
-  <div id="itinerary-root"></div>
+  <%- include('../partials/navbar') %>
+
+  <main>
+    <div id="group-tabs-root" 
+         data-group-id="123" 
+         data-user-id="1" 
+         data-group-name="Test Trip">
+    </div>
+  </main>
+
+  <%- include('../partials/footer') %>
+
   <script src="/js/groupTabs.js" defer></script>
 </body>
 </html>
