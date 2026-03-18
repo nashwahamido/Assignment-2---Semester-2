@@ -6,7 +6,7 @@ import '../../public/css/styles_group.css'
 import '../../public/css/styles_questions.css'
 
 import App from './App.jsx';
-import GroupProfile from "./groupprofile.jsx";
+import GroupProfile from "./GroupProfile.jsx";
 
 // code for the index.html page
 const root = document.getElementById('root');
