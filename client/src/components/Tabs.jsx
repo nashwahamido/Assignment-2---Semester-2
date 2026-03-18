@@ -1,39 +1,49 @@
+/**
+ * Tabs.jsx
+ * ─────────────────────────────────────────────────────────────────────────────
+ * WHERE THIS LIVES ON THE PAGE
+ *
+ * The EJS page (groupPage.ejs) renders this structure:
+ *
+ *   <%- include('partials/navbar',  { user }) %>
+ *   <%- include('partials/header',  { title, subtitle }) %>
+ *   <%- include('partials/sidebar', { activeMenu }) %>
+ *
+ *     <!-- MOUNT POINT — React fills this div -->
+ *     <div id="group-tabs-root"
+ *          data-group-id="<%= group.id %>"
+ *          data-user-id="<%= user.id %>"
+ *          data-group-name="<%= group.name %>">
+ *     </div>
+ *
+ *   <%- include('partials/footer') %>
+ *   <script type="module" src="/js/groupTabs.js"></script>
+ *
+ * This component renders INSIDE #group-tabs-root.
+ * It is mounted by groupTabs.jsx (the entry point / mount file).
+ * ─────────────────────────────────────────────────────────────────────────────
+ *
+ * Props:
+ *   tabs        {Array}    — [{ id, label, content, icon?, badge? }]
+ *   defaultTab  {string}   — id of the tab to show on first load
+ *   onTabChange {function} — optional callback(tabId) when user switches tabs
+ */
+
 import React, { useState } from 'react';
 import '../styles/tabs.css';
 
-/**
- * Tabs Component
- * @component
- * @example
- * const tabs = [
- *   { id: 'chat', label: 'Chat', content: <ChatContent /> },
- *   { id: 'recommended', label: 'Recommended', content: <RecommendedContent /> },
- *   { id: 'itinerary', label: 'Itinerary', content: <ItineraryContent /> }
- * ];
- * 
- * <Tabs tabs={tabs} defaultTab="chat" />
- */
 const Tabs = ({ tabs = [], defaultTab = null, onTabChange = null }) => {
-  // Set the active tab - use defaultTab if provided, otherwise use first tab
-  const [activeTab, setActiveTab] = useState(defaultTab || (tabs.length > 0 ? tabs[0].id : null));
+  const [activeTab, setActiveTab] = useState(
+    defaultTab || (tabs.length > 0 ? tabs[0].id : null)
+  );
 
-  /**
-   * Handle tab click
-   * Updates active tab and calls onTabChange callback if provided
-   */
   const handleTabClick = (tabId) => {
     setActiveTab(tabId);
-    if (onTabChange) {
-      onTabChange(tabId);
-    }
+    if (onTabChange) onTabChange(tabId);
   };
 
-  /**
-   * Handle keyboard navigation
-   * Arrow keys to move between tabs, Enter/Space to activate
-   */
   const handleKeyDown = (e, tabId) => {
-    const tabIds = tabs.map(tab => tab.id);
+    const tabIds = tabs.map((t) => t.id);
     const currentIndex = tabIds.indexOf(activeTab);
     let newIndex = currentIndex;
 
@@ -58,12 +68,9 @@ const Tabs = ({ tabs = [], defaultTab = null, onTabChange = null }) => {
     if (newIndex !== currentIndex) {
       const newTabId = tabIds[newIndex];
       handleTabClick(newTabId);
-      // Focus the new tab button
       setTimeout(() => {
-        const tabButton = document.querySelector(`[data-tab-id="${newTabId}"]`);
-        if (tabButton) {
-          tabButton.focus();
-        }
+        const btn = document.querySelector(`[data-tab-id="${newTabId}"]`);
+        if (btn) btn.focus();
       }, 0);
     }
   };
@@ -78,7 +85,8 @@ const Tabs = ({ tabs = [], defaultTab = null, onTabChange = null }) => {
 
   return (
     <div className="tabs-container">
-      {/* Tab Buttons */}
+
+      {/* ── Tab Buttons ────────────────────────────────────────────────────── */}
       <div className="tab-buttons" role="tablist">
         {tabs.map((tab) => (
           <button
@@ -92,14 +100,14 @@ const Tabs = ({ tabs = [], defaultTab = null, onTabChange = null }) => {
             aria-controls={`${tab.id}-panel`}
             tabIndex={activeTab === tab.id ? 0 : -1}
           >
-            {tab.icon && <span className="tab-icon">{tab.icon}</span>}
+            {tab.icon  && <span className="tab-icon">{tab.icon}</span>}
             <span className="tab-label">{tab.label}</span>
             {tab.badge && <span className="tab-badge">{tab.badge}</span>}
           </button>
         ))}
       </div>
 
-      {/* Tab Content */}
+      {/* ── Tab Content Panels ─────────────────────────────────────────────── */}
       <div className="tab-content-wrapper">
         {tabs.map((tab) => (
           <div
@@ -114,6 +122,7 @@ const Tabs = ({ tabs = [], defaultTab = null, onTabChange = null }) => {
           </div>
         ))}
       </div>
+
     </div>
   );
 };

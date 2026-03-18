@@ -1,0 +1,159 @@
+<%# ─── groupPage.ejs ─────────────────────────────────────────────────────────
+    The EJS partial wrapper for the group page.
+
+    This file is the FULL PAGE SHELL. It:
+      1. Pulls in the four reusable EJS partials (navbar, header, sidebar, footer)
+      2. Renders the left-side groups list
+      3. Provides the three React mount point divs on the right side
+
+    The React components (Tabs, ItineraryBuilder, ChatBox, VotingSystem) are
+    NOT written here — they live in client/src/components/.
+    They are mounted at runtime by the script tags at the bottom.
+
+    ─── Data expected from the server route ──────────────────────────────────
+    res.render('groups/groupPage', {
+      user:   { id, name, email, avatar },   ← logged-in user
+      group:  { id, name, destination },     ← currently viewed group
+      groups: [{ id, name }, ...]            ← all groups the user belongs to
+    });
+
+    ─── Route example ────────────────────────────────────────────────────────
+    router.get('/groups/:id', requireLogin, async (req, res) => {
+      const group  = await Group.findById(req.params.id);
+      const groups = await Group.findByUserId(req.user.id);
+      res.render('groups/groupPage', { user: req.user, group, groups });
+    });
+─────────────────────────────────────────────────────────────────────────────%>
+
+<%# ── Page title & stylesheet ───────────────────────────────────────────────%>
+<% locals.title  = group ? group.name + ' — Atlasphere' : 'Group — Atlasphere' %>
+<% locals.styles = ['/css/group-profile.css'] %>
+
+<%# ════════════════════════════════════════════════════════════════════════════
+    PARTIAL 1 — Navbar
+    Shows the top navigation bar with logo, links, and user menu.
+    Pass `user` so it can show the avatar / sign-in button correctly.
+════════════════════════════════════════════════════════════════════════════ %>
+<%- include('../partials/navbar', { user: user }) %>
+
+<%# ════════════════════════════════════════════════════════════════════════════
+    PARTIAL 2 — Header
+    Shows the page title banner with an optional background image.
+    `title`    → large heading text
+    `subtitle` → smaller text below (e.g. destination name)
+════════════════════════════════════════════════════════════════════════════ %>
+<%- include('../partials/header', {
+  title:    group ? group.name : 'Group',
+  subtitle: group ? group.destination : ''
+}) %>
+
+<main>
+  <div class="sectionContainer">
+
+    <%# ══════════════════════════════════════════════════════════════════════
+        PARTIAL 3 — Sidebar
+        Left-side navigation drawer for dashboard pages.
+        `activeMenu` highlights the correct nav item.
+    ══════════════════════════════════════════════════════════════════════ %>
+    <%- include('../partials/sidebar', { activeMenu: 'trips' }) %>
+
+    <%# ── Left panel: groups list ─────────────────────────────────────── %>
+    <section class="creategroupContainer">
+      <h4>Groups</h4>
+      <p><a href="/groups/create">Create a group</a></p>
+      <p>Search for a group</p>
+      <input type="search" id="groupsearch" name="groupsearch" placeholder="Search groups...">
+      <p>Your groups:</p>
+      <div class="joinedGroupsContainer">
+        <ul>
+          <% if (groups && groups.length > 0) { %>
+            <% groups.forEach(function(g) { %>
+              <li>
+                <a href="/groups/<%= g.id %>"
+                   class="<%= (group && group.id === g.id) ? 'active' : '' %>">
+                  <%= g.name %>
+                </a>
+              </li>
+            <% }) %>
+          <% } else { %>
+            <li><em>You haven't joined any groups yet.</em></li>
+          <% } %>
+        </ul>
+      </div>
+    </section>
+
+    <%# ── Right panel: React mount points ────────────────────────────── %>
+    <section class="toggleTabsContainer">
+
+      <%# ──────────────────────────────────────────────────────────────────
+          MOUNT POINT 1 — Tabs + ItineraryBuilder   (Person 3)
+          ────────────────────────────────────────────────────────────────
+          React reads:
+            data-group-id   → passed as tripId to ItineraryBuilder
+            data-user-id    → available inside groupTabs.jsx
+            data-group-name → shown in placeholder labels
+
+          Entry point : client/src/groupTabs.jsx
+          Build output: public/js/groupTabs.js
+      ──────────────────────────────────────────────────────────────────%>
+      <div id="group-tabs-root"
+           data-group-id="<%= group ? group.id : '' %>"
+           data-user-id="<%= user ? user.id : '' %>"
+           data-group-name="<%= group ? group.name : '' %>">
+        <p class="react-loading">Loading tabs...</p>
+      </div>
+
+      <%# ──────────────────────────────────────────────────────────────────
+          MOUNT POINT 2 — ChatBox   (Person 1)
+          ────────────────────────────────────────────────────────────────
+          Person 1: build ChatBox.jsx in client/src/components/ChatBox.jsx
+          The wrapper chatApp.jsx reads these data attributes and passes
+          them as props: groupId, userId, userName.
+
+          Entry point : client/src/chatApp.jsx
+          Build output: public/js/chatApp.js
+      ──────────────────────────────────────────────────────────────────%>
+      <div id="chat-root"
+           data-group-id="<%= group ? group.id : '' %>"
+           data-user-id="<%= user ? user.id : '' %>"
+           data-user-name="<%= user ? user.name : 'Guest' %>">
+        <p class="react-loading">Loading chat...</p>
+      </div>
+
+      <%# ──────────────────────────────────────────────────────────────────
+          MOUNT POINT 3 — VotingSystem   (Person 2)
+          ────────────────────────────────────────────────────────────────
+          Person 2: build VotingSystem.jsx in client/src/components/VotingSystem.jsx
+          The wrapper votingApp.jsx reads these data attributes and passes
+          them as props: groupId, userId, userName.
+
+          Entry point : client/src/votingApp.jsx
+          Build output: public/js/votingApp.js
+      ──────────────────────────────────────────────────────────────────%>
+      <div id="voting-root"
+           data-group-id="<%= group ? group.id : '' %>"
+           data-user-id="<%= user ? user.id : '' %>"
+           data-user-name="<%= user ? user.name : 'Guest' %>">
+        <p class="react-loading">Loading recommendations...</p>
+      </div>
+
+    </section>
+  </div>
+</main>
+
+<%# ════════════════════════════════════════════════════════════════════════════
+    PARTIAL 4 — Footer
+    Shows the bottom footer with links and copyright.
+════════════════════════════════════════════════════════════════════════════ %>
+<%- include('../partials/footer') %>
+
+<%# ── React script tags ──────────────────────────────────────────────────────
+    Run `pnpm build` first so these compiled files exist in public/js/
+
+    groupTabs.js → mounts Tabs + ItineraryBuilder into #group-tabs-root
+    chatApp.js   → mounts ChatBox into #chat-root             (Person 1)
+    votingApp.js → mounts VotingSystem into #voting-root      (Person 2)
+──────────────────────────────────────────────────────────────────────────── %>
+<script type="module" src="/js/groupTabs.js"></script>
+<script type="module" src="/js/chatApp.js"></script>
+<script type="module" src="/js/votingApp.js"></script>
