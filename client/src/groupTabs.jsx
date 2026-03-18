@@ -46,7 +46,7 @@ if (tabsMount) {
   const userId    = tabsMount.dataset.userId;
   const groupName = tabsMount.dataset.groupName;
 
-  // ── Tab content: Chat placeholder (Person 1 replaces this) ───────────────
+  // ── Tab content: Chat placeholder (Anna replaces this) ───────────────
   const ChatTabPlaceholder = () => (
     <div className="tab-placeholder">
       <div className="placeholder-icon">💬</div>
@@ -56,7 +56,7 @@ if (tabsMount) {
     </div>
   );
 
-  // ── Tab content: Voting placeholder (Person 2 replaces this) ─────────────
+  // ── Tab content: Voting placeholder (Neesan replaces this) ─────────────
   const VotingTabPlaceholder = () => (
     <div className="tab-placeholder">
       <div className="placeholder-icon">⭐</div>
@@ -66,12 +66,12 @@ if (tabsMount) {
     </div>
   );
 
-  // ── Tab content: ItineraryBuilder (Person 3's real component) ────────────
+  // ── Tab content: ItineraryBuilder (Nashwa's component) ────────────
   const ItineraryTab = () => (
     <ItineraryBuilder
       tripId={groupId}
       onSave={(itinerary) => {
-        // ✏️ Week 2: replace this with a fetch() call to save to the backend
+        // Week 2: replace this with a fetch() call to save to the backend
         // Example:
         //   fetch(`/api/groups/${groupId}/itinerary`, {
         //     method: 'POST',
@@ -138,7 +138,7 @@ if (chatMount) {
     <div className="tab-placeholder">
       <div className="placeholder-icon">💬</div>
       <h3>Chat coming soon</h3>
-      <p>Person 1 is building the ChatBox component.</p>
+      <p>Anna is building the ChatBox component.</p>
     </div>
   );
 
@@ -182,7 +182,7 @@ if (votingMount) {
     <div className="tab-placeholder">
       <div className="placeholder-icon">⭐</div>
       <h3>Voting coming soon</h3>
-      <p>Person 2 is building the VotingSystem component.</p>
+      <p>Neesan is building the VotingSystem component.</p>
     </div>
   );
 
