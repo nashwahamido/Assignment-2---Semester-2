@@ -23,13 +23,13 @@ app.use(session(sessionConfig));
 
 // Routes
 app.use('/', require('./routes/index'));
-app.use('/auth', require('./routes/auth'));
-app.use('/users', require('./routes/users'));
-app.use('/groups', require('./routes/groups'));
-app.use('/activities', require('./routes/activities'));
-app.use('/recommendations', require('./routes/recommendations'));
-app.use('/itinerary', require('./routes/itinerary'));
-app.use('/chat', require('./routes/chat'));
+// app.use('/auth', require('./routes/auth'));
+// app.use('/users', require('./routes/users'));
+// app.use('/groups', require('./routes/groups'));
+// app.use('/activities', require('./routes/activities'));
+// app.use('/recommendations', require('./routes/recommendations'));
+// app.use('/itinerary', require('./routes/itinerary'));
+// app.use('/chat', require('./routes/chat'));
 
 // Error handling middleware
 const errorMiddleware = require('./middleware/errorMiddleware');
