@@ -11,7 +11,7 @@
 
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <link rel="stylesheet" href="/css/groupTabs.css">
+    <link rel="stylesheet" href="/css/groups.css">
 
 </head>
 
@@ -49,7 +49,9 @@
 
     </main>
 
-    <form action="/groups/create/confirm" method="get">
+    <form action="/groups/create/days" method="post">
+        <label for="days">Days</label>
+        <input type="number" id="days" name="days">
         <button type="submit">Next</button>
     </form>
 
