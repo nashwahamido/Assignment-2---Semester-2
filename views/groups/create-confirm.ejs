@@ -1,91 +1,53 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-    <title>Group created and confirmed and inviting friends</title>
-
-    <meta charset="UTF-8">
-    <meta name="description" content="Group creation confirmed">
-    <meta name="keywords"
-        content="Group created, group confirmed, add friends, invite friends, share link, change group name, upload group image">
-    <meta name="author" content="Group 4">
-
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <link rel="stylesheet" href="/css/groups.css">
-
-
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Group Created — Atlasphere</title>
+  <link rel="stylesheet" href="/css/styles.css">
 </head>
-
 <body>
-    <!-- Navigation bar on top of the page -->
-    <nav class="navbar">
-        <a href="#"><img src="#" alt="logo icon of Atlasphere"></a>
-        <a href="#">Atlasphere</a>
-        <a href="#" class="right">Home</a>
-        <a href="#" class="right">Profile</a>
-        <a href="#" class="right">Settings</a>
-        <a href="#" class="right">Sign out</a>
-    </nav>
 
-    <header>
+<%- include('../partials/navbar', { user: typeof user !== 'undefined' ? user : null }) %>
 
-    </header>
+<!-- Group Created — matches Figma "Your Country group has been created!" -->
+<div class="group-creation-page">
+  <div class="group-creation-bg">
+    <img src="https://images.unsplash.com/photo-1509316785289-025f5b846b35?w=1600&q=80" alt="Desert landscape at sunset">
+  </div>
 
-    <main>
-        <h1>Your group "#" has been created</h1>
-        <p>Now you can add your friends by searching for them or sending them the link to join the group.</p>
+  <div class="group-creation-content" style="text-align: left;">
+    <div class="confirmed-layout">
+      <div class="confirmed-left">
+        <h1>Your &ldquo;Country&rdquo; group<br>has been created!</h1>
 
-        <!-- container that includes adding/inviting friends to your group and uploading a group image -->
-        <div class="groupfriendContainer">
-
-            <!-- container where users can add or invite friends to join the group -->
-            <section class="addfriendContainer">
-                <form action="mailto:someone@example.com" method="post" enctype="text/plain">
-                    <label for="friendSearch">Search for a friend:</label>
-                    <input type="search" placeholder="Search your friend...">
-
-                    <br>
-                    <p>or</p>
-                    <p>Send the link to a friend via e-mail:</p>
-
-                    <label for="friendemail">Your friend's e-mail address:</label><br>
-                    <input type="email" id="friendemail" name="friendemail" required><br>
-                    <label for="friendmsg">A short message (optional):</label><br>
-                    <input type="text" id="friendmsg" name="friendmsg"><br>
-                    <input type="submit" onclick="" value="Share link">
-                </form>
-            </section>
-
-            <!-- container where users can change the groups name or -->
-            <section class="groupNameImgContainer">
-                <figure>
-                    <img src="#" alt="image for group - optional">
-                </figure>
-                <div>
-                    <form action="#" method="post" enctype="">
-                        <label for="changeGroupname">Change your group name: </label><br>
-                        <input type="text" id="changeGroupname" name="changeGroupname"><br>
-                        <input type="submit" onclick="" value="Change your group name"><br>
-
-                        <label for="uploadGroupImg">Upload a group image: </label><br>
-                        <input type="file" id="uploadGroupImg" name="uploadGroupImg" accept="image/*"><br>
-                        <input type="submit" onclick="" value="Upload a group image">
-                    </form>
-                </div>
-            </section>
-
+        <div style="margin-top: 32px;">
+          <label style="font-size: 15px; font-weight: 500; color: var(--text-secondary); display: block; margin-bottom: 8px;">Search for a friend</label>
+          <div class="search-input">
+            <span class="search-icon">🔍</span>
+            <input type="text" placeholder="Search...">
+          </div>
         </div>
 
+        <p style="color: var(--text-secondary); margin: 12px 0;">or</p>
 
-    </main>
-    <form action="/groups/create/confirm" method="post">
-        <button type="submit">Confirm</button>
-    </form>
-    <footer>
+        <a href="#" class="btn btn-secondary" style="width: auto;">Share Link</a>
+      </div>
 
-    </footer>
+      <div class="confirmed-right">
+        <div class="upload-circle" style="width: 140px; height: 140px;">
+          <span class="upload-icon">🖼️</span>
+          <input type="file" accept="image/*">
+        </div>
+        <a href="#" class="resend-link" style="font-size: 13px;">Upload Profile Picture</a>
+      </div>
+    </div>
+
+    <div class="setup-actions" style="justify-content: flex-start; margin-top: 40px;">
+      <a href="/groups/1" class="btn btn-primary">Go to Group</a>
+    </div>
+  </div>
+</div>
 
 </body>
-
 </html>

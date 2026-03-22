@@ -22,4 +22,33 @@
     </main>
     <footer></footer>
   </body>
+</html><!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Profile Created — Atlasphere</title>
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+
+<%- include('../partials/navbar', { user: typeof user !== 'undefined' ? user : null }) %>
+
+<!-- Profile Created — matches Figma -->
+<div class="setup-page">
+  <div class="setup-bg">
+    <img src="https://images.unsplash.com/photo-1523531294919-4bcd7c65e216?w=1600&q=80" alt="Cinque Terre coastline">
+  </div>
+
+  <div class="setup-content">
+    <h1>Your profile has been created!</h1>
+
+    <div class="setup-actions" style="margin-top: 40px;">
+      <a href="/groups/create/country" class="btn btn-primary">Create a group</a>
+      <a href="/" class="btn btn-secondary">Skip</a>
+    </div>
+  </div>
+</div>
+
+</body>
 </html>

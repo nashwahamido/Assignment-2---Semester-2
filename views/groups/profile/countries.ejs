@@ -1,66 +1,102 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <title>Question: Which countries have you visited?</title>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Countries Visited — Atlasphere</title>
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
 
-    <meta charset="UTF-8">
-    <meta name="description" content="Question: Which countries have you visited?">
-    <meta name="keywords" content="Question: Which countries have you visited?">
-    <meta name="author" content="Group 4">
+<%- include('../../partials/navbar', { user: typeof user !== 'undefined' ? user : null }) %>
 
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- What countries have you visited? — matches Figma -->
+<div class="setup-page">
+  <div class="setup-bg">
+    <img src="https://images.unsplash.com/photo-1501785888041-af3ef285b470?w=1600&q=80" alt="Mountain lake landscape">
+  </div>
 
-    <link rel="stylesheet" href="../css/styles.css">
-    <link rel="stylesheet" href="../css/styles_questions.css">
-  </head>
+  <div class="setup-content">
+    <h1>What countries have you visited?</h1>
 
-  <body>
-    <nav class="navbar">
-      <a href="#"><img src="#" alt="logo icon of Atlasphere"></a>
-      <a href="#">Atlasphere</a>
-      <a href="#" class="right">Home</a>
-      <a href="#" class="right">Profile</a>
-      <a href="#" class="right">Settings</a>
-      <a href="#" class="right">Sign out</a>
-    </nav>
+    <div class="search-input">
+      <span class="search-icon">🔍</span>
+      <input type="text" id="countrySearch" placeholder="Search...">
+    </div>
 
-    <header></header>
+    <div class="location-grid" id="countryGrid">
+      <!-- These would be dynamically populated; sample data shown -->
+      <div class="location-card" data-country="ireland">
+        <img class="flag" src="https://flagcdn.com/w160/ie.png" alt="Ireland flag">
+        <span class="location-name">Ireland</span>
+      </div>
+      <div class="location-card" data-country="austria">
+        <img class="flag" src="https://flagcdn.com/w160/at.png" alt="Austria flag">
+        <span class="location-name">Austria</span>
+      </div>
+      <div class="location-card" data-country="italy">
+        <img class="flag" src="https://flagcdn.com/w160/it.png" alt="Italy flag">
+        <span class="location-name">Italy</span>
+      </div>
+      <div class="location-card" data-country="belgium">
+        <img class="flag" src="https://flagcdn.com/w160/be.png" alt="Belgium flag">
+        <span class="location-name">Belgium</span>
+      </div>
+      <div class="location-card" data-country="france">
+        <img class="flag" src="https://flagcdn.com/w160/fr.png" alt="France flag">
+        <span class="location-name">France</span>
+      </div>
+      <div class="location-card" data-country="switzerland">
+        <img class="flag" src="https://flagcdn.com/w160/ch.png" alt="Switzerland flag">
+        <span class="location-name">Switzerland</span>
+      </div>
+      <div class="location-card" data-country="england">
+        <img class="flag" src="https://flagcdn.com/w160/gb-eng.png" alt="England flag">
+        <span class="location-name">England</span>
+      </div>
+      <div class="location-card" data-country="scotland">
+        <img class="flag" src="https://flagcdn.com/w160/gb-sct.png" alt="Scotland flag">
+        <span class="location-name">Scotland</span>
+      </div>
+      <div class="location-card" data-country="netherlands">
+        <img class="flag" src="https://flagcdn.com/w160/nl.png" alt="Netherlands flag">
+        <span class="location-name">The Netherlands</span>
+      </div>
+      <div class="location-card" data-country="germany">
+        <img class="flag" src="https://flagcdn.com/w160/de.png" alt="Germany flag">
+        <span class="location-name">Germany</span>
+      </div>
+      <div class="location-card" data-country="finland">
+        <img class="flag" src="https://flagcdn.com/w160/fi.png" alt="Finland flag">
+        <span class="location-name">Finland</span>
+      </div>
+      <div class="location-card" data-country="sweden">
+        <img class="flag" src="https://flagcdn.com/w160/se.png" alt="Sweden flag">
+        <span class="location-name">Sweden</span>
+      </div>
+    </div>
 
-    <main>
-      <section>
-        <h1>Which countries have you visited?</h1>
-        <a href="qcitiesvisited.html">Skip</a><br>
+    <div class="setup-actions">
+      <a href="/setup/cities" class="btn btn-primary">Next</a>
+      <a href="/setup/cities" class="skip-link">Skip</a>
+    </div>
+  </div>
+</div>
 
-        <form>
-          <input
-            type="search"
-            id="countrysearch"
-            name="countrysearch"
-            placeholder="Search..."
-          ><br>
-        </form>
+<script>
+  // Toggle card selection
+  document.querySelectorAll('.location-card').forEach(card => {
+    card.addEventListener('click', () => card.classList.toggle('selected'));
+  });
+  // Search filter
+  document.getElementById('countrySearch').addEventListener('input', (e) => {
+    const q = e.target.value.toLowerCase();
+    document.querySelectorAll('.location-card').forEach(card => {
+      const name = card.querySelector('.location-name').textContent.toLowerCase();
+      card.style.display = name.includes(q) ? '' : 'none';
+    });
+  });
+</script>
 
-        <div class="locationContainer">
-          <% countries.forEach((country) => { %>
-            <div class="locationCard">
-              <figure>
-                <img
-                  src="<%= country.image %>"
-                  alt="<%= country.name %>"
-                  class="locationImg"
-                >
-              </figure>
-              <div class="locationCardText">
-                <h4><%= country.name %></h4>
-              </div>
-            </div>
-          <% }) %>
-        </div>
-      </section>
-
-      <a href="qcitiesvisited.html">Next</a><br>
-    </main>
-
-    <footer></footer>
-  </body>
+</body>
 </html>

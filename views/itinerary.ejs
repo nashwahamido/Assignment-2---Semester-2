@@ -2,19 +2,21 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Itinerary — Atlasphere</title>
-  <link rel="stylesheet" href="/css/groupTabs.css">
+  <link rel="stylesheet" href="/css/styles.css">
 </head>
 <body>
-  <%- include('../partials/navbar') %>
 
-  <main>
-    <div id="itinerary-root"></div>
-  </main>
+<%- include('partials/navbar', { user: typeof user !== 'undefined' ? user : null }) %>
 
-  <%- include('../partials/footer') %>
+<div class="profile-page">
+  <h1>Itinerary</h1>
+  <p style="color: var(--text-secondary);">Select a group to view its itinerary.</p>
+  <a href="/groups" class="btn btn-primary" style="margin-top: 24px;">View Groups</a>
+</div>
 
-  <script src="/js/groupTabs.js" defer></script>
+<%- include('partials/footer') %>
+
 </body>
 </html>
-

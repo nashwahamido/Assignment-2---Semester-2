@@ -1,37 +1,46 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8">
-    <title>Profile</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="/css/styles.css">
-    <link rel="stylesheet" href="/css/partials.css">
-  </head>
-  <body>
-    <%- include('partials/navbar') %>
-    <main>
-      <h1>Profile</h1>
-      <figure class="iprofileImg">
-        <img src="<%= user.profile_image || '/images/default-avatar.png' %>" alt="profile image" class="personalProfileImg">
-      </figure>
-      <div class="username-pill">
-        <%= user.username %>
-      </div>
-      <div class="stats-row">
-        <div class="stat">
-          <p>Countries visited</p>
-          <span><%= user.countries_visited || 0 %></span>
-        </div>
-        <div class="stat">
-          <p>Planning to visit</p>
-          <span><%= user.planning_to_visit || 0 %></span>
-        </div>
-        <div class="stat">
-          <p>Number of Created Groups</p>
-          <span><%= user.groups_created || 0 %></span>
-        </div>
-      </div>
-    </main>
-    <%- include('partials/footer') %>
-  </body>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Profile — Atlasphere</title>
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+
+<%- include('partials/navbar', { user: typeof user !== 'undefined' ? user : null }) %>
+
+<div class="profile-page">
+  <h1>Profile</h1>
+
+  <figure class="iprofileImg">
+    <img class="personalProfileImg"
+         src="<%= (typeof user !== 'undefined' && user && user.profile_image) ? user.profile_image : '' %>"
+         alt="Profile picture"
+         onerror="this.style.display='none'">
+  </figure>
+
+  <div class="username-pill">
+    <%= (typeof user !== 'undefined' && user) ? (user.username || user.name) : 'Guest' %>
+  </div>
+
+  <div class="stats-row">
+    <div class="stat">
+      <p>Countries visited</p>
+      <span><%= (typeof user !== 'undefined' && user && user.countries_visited) ? user.countries_visited : 0 %></span>
+    </div>
+    <div class="stat">
+      <p>Cities visited</p>
+      <span><%= (typeof user !== 'undefined' && user && user.cities_visited) ? user.cities_visited : 0 %></span>
+    </div>
+    <div class="stat">
+      <p>Groups created</p>
+      <span><%= (typeof user !== 'undefined' && user && user.groups_created) ? user.groups_created : 0 %></span>
+    </div>
+  </div>
+</div>
+
+<%- include('partials/footer') %>
+
+</body>
 </html>

@@ -1,169 +1,84 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-    <title>Group creation: question on country</title>
-
-    <meta charset="UTF-8">
-    <meta name="description" content="Group creation: question on country">
-    <meta name="keywords" content="Group creation, question, to which country you go">
-    <meta name="author" content="Group 4">
-
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <link rel="stylesheet" href="/css/groups.css">
-
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Choose Destination — Atlasphere</title>
+  <link rel="stylesheet" href="/css/styles.css">
 </head>
-
 <body>
-    <!-- Navigation bar on top of the page -->
-    <nav class="navbar">
-        <a href="#"><img src="#" alt="logo icon of Atlasphere"></a>
-        <a href="#">Atlasphere</a>
-        <a href="#" class="right">Home</a>
-        <a href="#" class="right">Profile</a>
-        <a href="#" class="right">Settings</a>
-        <a href="#" class="right">Sign out</a>
-    </nav>
 
-    <header>
+<%- include('../partials/navbar', { user: typeof user !== 'undefined' ? user : null }) %>
 
-    </header>
+<!-- Group Creation: Country — matches Figma "What is your destination" -->
+<div class="group-creation-page">
+  <div class="group-creation-bg">
+    <img src="https://images.unsplash.com/photo-1509316785289-025f5b846b35?w=1600&q=80" alt="Desert landscape at sunset">
+  </div>
 
-    <main>
-        <h1>To which country are you travelling with your group?</h1>
+  <div class="group-creation-content">
+    <h1>What is your destination<br>for your group holiday?</h1>
 
-        <input type="search" id="countrysearch" name="countrysearch" placeholder="Search country..."><br>
+    <div class="search-input" style="margin: 24px auto;">
+      <span class="search-icon">🔍</span>
+      <input type="text" id="countrySearch" placeholder="Search...">
+    </div>
 
-        <!-- container with country cards > users select one country -->
-        <!-- cards are not selectable yet -->
-        <div class="locationContainer">
-            <div class="locationCard">
-                <figure>
-                    <img src="#" alt="locationname" class="locationImg">
-                </figure>
-                <div class="locationCardText">
-                    <h4>country name</h4>
-                </div>
-            </div>
+    <form action="/groups/create/city" method="get" id="countryForm">
+      <input type="hidden" name="country" id="selectedCountry" value="">
 
-            <div class="locationCard">
-                <figure>
-                    <img src="#" alt="locationname" class="locationImg">
-                </figure>
-                <div class="locationCardText">
-                    <h4>country name</h4>
-                </div>
-            </div>
-
-            <div class="locationCard">
-                <figure>
-                    <img src="#" alt="locationname" class="locationImg">
-                </figure>
-                <div class="locationCardText">
-                    <h4>country name</h4>
-                </div>
-            </div>
-
-            <div class="locationCard">
-                <figure>
-                    <img src="#" alt="locationname" class="locationImg">
-                </figure>
-                <div class="locationCardText">
-                    <h4>country name</h4>
-                </div>
-            </div>
-
-            <div class="locationCard">
-                <figure>
-                    <img src="#" alt="locationname" class="locationImg">
-                </figure>
-                <div class="locationCardText">
-                    <h4>country name</h4>
-                </div>
-            </div>
-
-            <div class="locationCard">
-                <figure>
-                    <img src="#" alt="locationname" class="locationImg">
-                </figure>
-                <div class="locationCardText">
-                    <h4>country name</h4>
-                </div>
-            </div>
-
-            <div class="locationCard">
-                <figure>
-                    <img src="#" alt="locationname" class="locationImg">
-                </figure>
-                <div class="locationCardText">
-                    <h4>country name</h4>
-                </div>
-            </div>
-
-            <div class="locationCard">
-                <figure>
-                    <img src="#" alt="locationname" class="locationImg">
-                </figure>
-                <div class="locationCardText">
-                    <h4>country name</h4>
-                </div>
-            </div>
-
-            <div class="locationCard">
-                <figure>
-                    <img src="#" alt="locationname" class="locationImg">
-                </figure>
-                <div class="locationCardText">
-                    <h4>country name</h4>
-                </div>
-            </div>
-
-            <div class="locationCard">
-                <figure>
-                    <img src="#" alt="locationname" class="locationImg">
-                </figure>
-                <div class="locationCardText">
-                    <h4>country name</h4>
-                </div>
-            </div>
-
-            <div class="locationCard">
-                <figure>
-                    <img src="#" alt="locationname" class="locationImg">
-                </figure>
-                <div class="locationCardText">
-                    <h4>country name</h4>
-                </div>
-            </div>
-
-            <div class="locationCard">
-                <figure>
-                    <img src="#" alt="locationname" class="locationImg">
-                </figure>
-                <div class="locationCardText">
-                    <h4>country name</h4>
-                </div>
-            </div>
+      <div class="destination-grid" id="countryGrid">
+        <div class="destination-card" data-value="france">
+          <div class="card-img">🖼️</div>
+          <span class="card-name">France</span>
         </div>
+        <div class="destination-card" data-value="italy">
+          <div class="card-img">🖼️</div>
+          <span class="card-name">Italy</span>
+        </div>
+        <div class="destination-card" data-value="spain">
+          <div class="card-img">🖼️</div>
+          <span class="card-name">Spain</span>
+        </div>
+        <div class="destination-card" data-value="germany">
+          <div class="card-img">🖼️</div>
+          <span class="card-name">Germany</span>
+        </div>
+        <div class="destination-card" data-value="portugal">
+          <div class="card-img">🖼️</div>
+          <span class="card-name">Portugal</span>
+        </div>
+        <div class="destination-card" data-value="greece">
+          <div class="card-img">🖼️</div>
+          <span class="card-name">Greece</span>
+        </div>
+      </div>
 
+      <div class="setup-actions" style="margin-top: 32px;">
+        <button type="submit" class="btn btn-primary">Next</button>
+      </div>
+    </form>
+  </div>
+</div>
 
-
-        <form action="/groups/create/city" method="get">
-            <button type="submit">Next</button>
-        </form>
-        <!-- <form action="/groups/create/country" method="post">
-            <label for="country">Country</label>
-            <input type="text" id="country" name="country">
-            <button type="submit">Next</button>
-        </form> -->
-
-    </main>
-
-    <footer>
-
-    </footer>
+<script>
+  // Single-select country cards
+  document.querySelectorAll('#countryGrid .destination-card').forEach(card => {
+    card.addEventListener('click', () => {
+      document.querySelectorAll('#countryGrid .destination-card').forEach(c => c.classList.remove('selected'));
+      card.classList.toggle('selected');
+      document.getElementById('selectedCountry').value = card.dataset.value || '';
+    });
+  });
+  // Search filter
+  document.getElementById('countrySearch').addEventListener('input', (e) => {
+    const q = e.target.value.toLowerCase();
+    document.querySelectorAll('#countryGrid .destination-card').forEach(card => {
+      const name = card.querySelector('.card-name').textContent.toLowerCase();
+      card.style.display = name.includes(q) ? '' : 'none';
+    });
+  });
+</script>
 
 </body>
-
 </html>

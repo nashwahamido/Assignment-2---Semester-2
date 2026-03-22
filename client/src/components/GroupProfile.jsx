@@ -1,9 +1,22 @@
+/**
+ * GroupProfile.jsx
+ * ─────────────────────────────────────────────────────────────────────────────
+ * Standalone React component for the group profile view.
+ *
+ * NOTE: In the current architecture, groupPage.ejs uses groupTabs.jsx
+ * as the mount entry point (not this file directly). This component exists
+ * as a reusable alternative if you want to mount a full group profile
+ * from a different entry point.
+ *
+ * The EJS partials (navbar, header, sidebar, footer) are rendered server-side.
+ * This component only handles the interactive tab content area.
+ */
+
 import React, { useState } from 'react';
 import Tabs from './Tabs';
-import ChatContent from './ChatContent';
 import RecommendedContent from './RecommendedContent';
-import ItineraryContent from './ItineraryContent';
-import '../styles/group-profile.css';
+import ItineraryBuilder from './ItineraryBuilder';
+import VotingSystem from './VotingSystem';
 
 const GroupProfile = ({ groupId = 1 }) => {
   const [group] = useState({
@@ -24,25 +37,46 @@ const GroupProfile = ({ groupId = 1 }) => {
   //     .then((data) => setGroup(data));
   // }, [groupId]);
 
+  // Chat placeholder until ChatBox.jsx is built
+  const ChatPlaceholder = () => (
+    <div className="tab-placeholder">
+      <div className="placeholder-icon">💬</div>
+      <h3>Group Chat</h3>
+      <p>Chat for <strong>{group.name}</strong> will appear here.</p>
+    </div>
+  );
+
   const tabs = [
     {
       id: 'chat',
       label: 'Chat',
       icon: '💬',
       badge: 3,
-      content: <ChatContent groupId={groupId} />,
+      content: <ChatPlaceholder />,
     },
     {
       id: 'recommended',
       label: 'Recommended',
       icon: '⭐',
-      content: <RecommendedContent groupId={groupId} />,
+      content: (
+        <div>
+          <RecommendedContent groupId={groupId} />
+          <VotingSystem
+            onSubmit={(votes) => console.log('Votes:', votes)}
+          />
+        </div>
+      ),
     },
     {
       id: 'itinerary',
       label: 'Itinerary',
       icon: '📅',
-      content: <ItineraryContent groupId={groupId} tripId={groupId} />,
+      content: (
+        <ItineraryBuilder
+          tripId={groupId}
+          onSave={(data) => console.log('Itinerary saved:', data)}
+        />
+      ),
     },
   ];
 

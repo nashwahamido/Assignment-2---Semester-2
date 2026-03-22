@@ -1,68 +1,46 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-    <title>Group creation: question on length of vacation</title>
-
-    <meta charset="UTF-8">
-    <meta name="description" content="Group creation: question on length of vacation">
-    <meta name="keywords" content="Group creation, question, how long are you staying">
-    <meta name="author" content="Group 4">
-
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <link rel="stylesheet" href="/css/groups.css">
-
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Trip Length — Atlasphere</title>
+  <link rel="stylesheet" href="/css/styles.css">
 </head>
-
 <body>
 
-    <nav class="navbar">
-        <a href="#"><img src="#" alt="logo icon of Atlasphere"></a>
-        <a href="#">Atlasphere</a>
-        <a href="#" class="right">Home</a>
-        <a href="#" class="right">Profile</a>
-        <a href="#" class="right">Settings</a>
-        <a href="#" class="right">Sign out</a>
-    </nav>
+<%- include('../partials/navbar', { user: typeof user !== 'undefined' ? user : null }) %>
 
-    <header>
-        <!-- main image of the page -->
-        <figure>
-            <img src="" alt="image of #">
-        </figure>
-    </header>
+<!-- Group Creation: Days — matches Figma "How long do you plan to spend?" -->
+<div class="group-creation-page">
+  <div class="group-creation-bg">
+    <img src="https://images.unsplash.com/photo-1509316785289-025f5b846b35?w=1600&q=80" alt="Desert landscape at sunset">
+  </div>
 
-    <main>
-        <h1>How long are you staying?</h1>
-        <p>Drag the toggle to select the number of days:</p>
+  <div class="group-creation-content">
+    <h1>How long do you plan to spend?</h1>
+    <p>Drag the toggle to select the number of days</p>
 
-        <!-- slider with which users select how many days they travelling -->
-        <div class="sliderContainer">
-            <input type="range" min="1" max="365" value="50" class="slider" id="slideRange">
-            <p>Length: <span id="length"></span> days</p>
-        </div>
-        <!-- JS code for animating the slider showing the number of days -->
-        <script src="/js/groupTabs.js"></script>
+    <form action="/groups/create/confirm" method="get">
+      <div class="slider-container">
+        <input type="range" min="1" max="30" value="10" class="slider-track" id="slideRange" name="days">
+        <p class="slider-value"><span id="daysValue">10</span> Days</p>
+      </div>
 
-        <a href="create-confirm.ejs">Next</a>
-
-    </main>
-
-    <!-- <form action="/groups/create/confirm" method="get">
-    <button type="submit">Next</button>
-</form> -->
-
-    <form action="/groups/create/days" method="post">
-        <label for="days">Days</label>
-        <input type="number" id="days" name="days">
-        <button type="submit">Next</button>
+      <div class="setup-actions" style="margin-top: 40px;">
+        <button type="submit" class="btn btn-primary">Next</button>
+      </div>
     </form>
+  </div>
+</div>
 
-    <footer>
-
-    </footer>
+<script>
+  const slider = document.getElementById('slideRange');
+  const output = document.getElementById('daysValue');
+  output.textContent = slider.value;
+  slider.addEventListener('input', function() {
+    output.textContent = this.value;
+  });
+</script>
 
 </body>
-
 </html>

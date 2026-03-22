@@ -1,11 +1,10 @@
-const errorMiddleware = (err, req, res, next) => {
+// Error handling middleware
+module.exports = (err, req, res, next) => {
   console.error(err.stack);
   const status = err.status || 500;
   res.status(status).render('error', {
-    user: req.session ? req.session.user || null : null,
+    status: status,
     message: err.message || 'Something went wrong',
-    status: status
+    user: req.session ? req.session.user || null : null
   });
 };
-
-module.exports = errorMiddleware;

@@ -1,48 +1,42 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-
-    <meta charset="UTF-8">
-    <title><%= title %></title>
-
-    <meta name="description" content="Welcome to Atlasphere">
-    <meta name="keywords" content="Homepage, welcome, about the page, overview, introduction">
-    <meta name="author" content="Group 4">
-
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <link rel="stylesheet" href="/css/bootstrap.min.css">
-    <link rel="stylesheet" href="/css/style.css">
-
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sign In — Atlasphere</title>
+  <link rel="stylesheet" href="/css/styles.css">
 </head>
-
 <body>
-  <!-- include header and navbar template from partials -->
-  <%- include('../partials/navbar') %>
 
-  <%- include('../partials/header') %>
-  
-  <!-- each page's content is injected here -->
-  <div class="container-fluid">
-    <%- 
-        <section>
-            <h1>Welcome to Atlasphere</h1>
-            <p>Welcome to Atlasphere - a space where we help you and your friends to organise your travel trip.</p>
+<%- include('partials/navbar', { user: null }) %>
 
-            <!-- form to sign in or to register -->
-            <form>
-                <input type="button" onclick="" value="Sign in">
-                <input type="button" onclick="" value="Sign up">
-            </form>
-        </section>
-    
-    %>
+<div class="auth-page">
+  <div class="auth-bg">
+    <img src="https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=1600&q=80" alt="Mountain landscape">
   </div>
- 
-  <!-- include footer template from partials -->
-  <%- include('..partials/footer') %>
-  <script src="/js/bootstrap.bundle.min.js"> </script>
 
-  
-  </body>
+  <div class="auth-card">
+    <h1>Welcome Back</h1>
+
+    <form action="/auth/login" method="post">
+      <div class="form-group">
+        <label for="email">Email</label>
+        <input type="email" id="email" name="email" placeholder="Enter your email" required>
+      </div>
+
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input type="password" id="password" name="password" placeholder="Enter your password" required>
+      </div>
+
+      <button type="submit" class="btn btn-primary">Sign in</button>
+    </form>
+
+    <div class="auth-footer">
+      <p>Don't have an account? <a href="/auth/register">Register</a></p>
+    </div>
+  </div>
+</div>
+
+</body>
 </html>

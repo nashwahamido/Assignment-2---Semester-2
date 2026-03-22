@@ -1,12 +1,15 @@
-<!-- Page Header Partial -->
-<!-- Usage: <%- include('partials/header', { title: 'Page Title', subtitle: 'Optional subtitle', backgroundImage: '/images/bg.jpg' }) %> -->
-
-<header class="page-header" <% if (backgroundImage) { %>style="background-image: url('<%= backgroundImage %>');"<% } %>>
-    <div class="header-overlay"></div>
-    <div class="header-content">
-        <h1 class="header-title"><%= title %></h1>
-        <% if (subtitle) { %>
-            <p class="header-subtitle"><%= subtitle %></p>
-        <% } %>
-    </div>
+<!-- Page Header -->
+<header class="hero-header">
+  <div class="hero-figure">
+    <img src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1600&q=80" alt="Travel landscape">
+  </div>
+  <div class="hero-overlay"></div>
+  <div class="hero-content">
+    <% if (typeof title !== 'undefined' && title) { %>
+      <h1><%= title %></h1>
+    <% } %>
+    <% if (typeof subtitle !== 'undefined' && subtitle) { %>
+      <p><%= subtitle %></p>
+    <% } %>
+  </div>
 </header>

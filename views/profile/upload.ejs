@@ -1,31 +1,31 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <title>Profile picture upload</title>
-    <meta charset="UTF-8">
-    <meta name="description" content="Profile picture upload, optional">
-    <meta name="keywords" content="Profile picture upload, optional">
-    <meta name="author" content="Group 4">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="/css/styles.css">
-  </head>
-  <body>
-    <%- include('partials/navbar') %>
-    <header></header>
-    <main>
-      <section>
-        <h1>Show people your picture</h1>
-        <figure>
-          <img src="<%= user.profile_image || '/images/default-avatar.png' %>" alt="personal profile image" class="personalProfileImg">
-        </figure>
-        <form action="/users/upload-avatar" method="post" enctype="multipart/form-data">
-          <label>Upload a profile picture or do it later:</label><br>
-          <input type="file" id="profileimg" name="profileimg" accept="image/*"><br>
-          <input type="submit" value="Upload">
-        </form>
-        <a href="/profile/countries">Skip</a>
-      </section>
-    </main>
-    <footer></footer>
-  </body>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Upload Profile Picture — Atlasphere</title>
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+
+<%- include('../partials/navbar', { user: typeof user !== 'undefined' ? user : null }) %>
+
+<div class="setup-page">
+  <div class="setup-bg">
+    <img src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1600&q=80" alt="Mountain sunset">
+  </div>
+  <div class="setup-content text-center">
+    <h1>Upload Profile Picture</h1>
+    <div class="upload-circle">
+      <span class="upload-icon">🖼️</span>
+      <input type="file" accept="image/*">
+    </div>
+    <div class="setup-actions">
+      <a href="/profile" class="btn btn-primary">Save</a>
+      <a href="/profile" class="skip-link">Skip</a>
+    </div>
+  </div>
+</div>
+
+</body>
 </html>

@@ -1,70 +1,99 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <title>Question: Which cities have you visited?</title>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cities Visited — Atlasphere</title>
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
 
-    <meta charset="UTF-8">
-    <meta name="description" content="Question: Which cities have you visited?">
-    <meta name="keywords" content="Question: Which cities have you visited?">
-    <meta name="author" content="Group 4">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<%- include('../../partials/navbar', { user: typeof user !== 'undefined' ? user : null }) %>
 
-    <link rel="stylesheet" href="/css/styles.css">
-    <link rel="stylesheet" href="/css/styles_questions.css">
-  </head>
+<!-- What cities have you visited? — matches Figma -->
+<div class="setup-page">
+  <div class="setup-bg">
+    <img src="https://images.unsplash.com/photo-1534351590666-13e3e96b5017?w=1600&q=80" alt="European city view">
+  </div>
 
-  <body>
-    <nav class="navbar">
-      <a href="#"><img src="#" alt="logo icon of Atlasphere"></a>
-      <a href="#">Atlasphere</a>
-      <a href="#" class="right">Home</a>
-      <a href="#" class="right">Profile</a>
-      <a href="#" class="right">Settings</a>
-      <a href="#" class="right">Sign out</a>
-    </nav>
+  <div class="setup-content">
+    <h1>What cities have you visited?</h1>
 
-    <header></header>
+    <div class="search-input">
+      <span class="search-icon">🔍</span>
+      <input type="text" id="citySearch" placeholder="Search...">
+    </div>
 
-    <main>
-      <section>
-        <h1>Which cities have you visited?</h1>
-        <a href="#">Skip</a>
+    <div class="location-grid" id="cityGrid">
+      <div class="location-card" data-city="dublin">
+        <img class="flag" src="https://flagcdn.com/w160/ie.png" alt="Ireland">
+        <span class="location-name">Dublin</span>
+      </div>
+      <div class="location-card" data-city="vienna">
+        <img class="flag" src="https://flagcdn.com/w160/at.png" alt="Austria">
+        <span class="location-name">Vienna</span>
+      </div>
+      <div class="location-card" data-city="rome">
+        <img class="flag" src="https://flagcdn.com/w160/it.png" alt="Italy">
+        <span class="location-name">Rome</span>
+      </div>
+      <div class="location-card" data-city="brussels">
+        <img class="flag" src="https://flagcdn.com/w160/be.png" alt="Belgium">
+        <span class="location-name">Brussels</span>
+      </div>
+      <div class="location-card" data-city="paris">
+        <img class="flag" src="https://flagcdn.com/w160/fr.png" alt="France">
+        <span class="location-name">Paris</span>
+      </div>
+      <div class="location-card" data-city="zurich">
+        <img class="flag" src="https://flagcdn.com/w160/ch.png" alt="Switzerland">
+        <span class="location-name">Zurich</span>
+      </div>
+      <div class="location-card" data-city="london">
+        <img class="flag" src="https://flagcdn.com/w160/gb-eng.png" alt="England">
+        <span class="location-name">London</span>
+      </div>
+      <div class="location-card" data-city="glasgow">
+        <img class="flag" src="https://flagcdn.com/w160/gb-sct.png" alt="Scotland">
+        <span class="location-name">Glasgow</span>
+      </div>
+      <div class="location-card" data-city="amsterdam">
+        <img class="flag" src="https://flagcdn.com/w160/nl.png" alt="Netherlands">
+        <span class="location-name">Amsterdam</span>
+      </div>
+      <div class="location-card" data-city="berlin">
+        <img class="flag" src="https://flagcdn.com/w160/de.png" alt="Germany">
+        <span class="location-name">Berlin</span>
+      </div>
+      <div class="location-card" data-city="helsinki">
+        <img class="flag" src="https://flagcdn.com/w160/fi.png" alt="Finland">
+        <span class="location-name">Helsinki</span>
+      </div>
+      <div class="location-card" data-city="stockholm">
+        <img class="flag" src="https://flagcdn.com/w160/se.png" alt="Sweden">
+        <span class="location-name">Stockholm</span>
+      </div>
+    </div>
 
-        <form method="GET" action="">
-          <input
-            type="search"
-            id="citysearch"
-            name="citysearch"
-            placeholder="Search..."
-            value="<%= typeof search !== 'undefined' ? search : '' %>"
-          >
-        </form>
+    <div class="setup-actions">
+      <a href="/profile/confirmed" class="btn btn-primary">Next</a>
+      <a href="/profile/confirmed" class="skip-link">Skip</a>
+    </div>
+  </div>
+</div>
 
-        <div class="locationContainer">
-          <% if (cities && cities.length > 0) { %>
-            <% cities.forEach((city) => { %>
-              <div class="locationCard">
-                <figure>
-                  <img
-                    src="<%= city.image || '#' %>"
-                    alt="<%= city.name %>"
-                    class="locationImg"
-                  >
-                </figure>
-                <div class="locationCardText">
-                  <h4><%= city.name %></h4>
-                </div>
-              </div>
-            <% }) %>
-          <% } else { %>
-            <p>No cities found.</p>
-          <% } %>
-        </div>
-      </section>
+<script>
+  document.querySelectorAll('.location-card').forEach(card => {
+    card.addEventListener('click', () => card.classList.toggle('selected'));
+  });
+  document.getElementById('citySearch').addEventListener('input', (e) => {
+    const q = e.target.value.toLowerCase();
+    document.querySelectorAll('.location-card').forEach(card => {
+      const name = card.querySelector('.location-name').textContent.toLowerCase();
+      card.style.display = name.includes(q) ? '' : 'none';
+    });
+  });
+</script>
 
-      <a href="#">Next</a>
-    </main>
-
-    <footer></footer>
-  </body>
+</body>
 </html>
