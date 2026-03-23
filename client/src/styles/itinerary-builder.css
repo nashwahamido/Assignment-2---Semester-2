@@ -1,481 +1,203 @@
-/* ============================================
-   ITINERARY BUILDER — 3-Column Layout
+/**
+ * ItineraryBuilder.jsx
+ * ─────────────────────────────────────────────────────────────────────────────
+ *   LEFT:   Monthly calendar — click days to select range
+ *   CENTER: Weekly schedule — hourly time slots, drag-drop targets
+ *   RIGHT:  Activities panel — draggable items from recommendations
  */
 
-/* ── Theme defaults (dark) ── */
-.ib-layout {
-  --ib-card: #1a2736;
-  --ib-card-border: rgba(255,255,255,0.08);
-  --ib-card-shadow: 0 4px 24px rgba(0,0,0,0.25);
-  --ib-text: #ffffff;
-  --ib-text-muted: #7a8899;
-  --ib-input-bg: rgba(255,255,255,0.06);
-  --ib-input-border: rgba(255,255,255,0.1);
-  --ib-divider: rgba(255,255,255,0.06);
-  --ib-range-bg: rgba(74,124,191,0.25);
-  --ib-range-text: #a8c0e0;
-  --ib-accent: #E8933A;
-  --ib-accent-light: #f0ab5e;
-  --ib-blue: #3B5F8A;
-  --ib-blue-light: #4a7cbb;
-  --ib-block-bg: #E8933A;
-  --ib-block-text: #fff;
-  --ib-day-other: rgba(255,255,255,0.2);
-  --ib-highlight: #243344;
-}
+import React, { useState, useCallback } from 'react';
+import '../styles/itinerary-builder.css';
 
-/* ── Light theme override ── */
-[data-theme="light"] .ib-layout,
-.ib-layout.ib-layout--light {
-  --ib-card: #ffffff;
-  --ib-card-border: rgba(0,0,0,0.06);
-  --ib-card-shadow: 0 4px 24px rgba(0,0,0,0.06);
-  --ib-text: #1a1a2e;
-  --ib-text-muted: #6b7a8d;
-  --ib-input-bg: rgba(0,0,0,0.03);
-  --ib-input-border: rgba(0,0,0,0.08);
-  --ib-divider: rgba(0,0,0,0.06);
-  --ib-range-bg: rgba(74,124,191,0.12);
-  --ib-range-text: #2b4c6f;
-  --ib-day-other: rgba(0,0,0,0.2);
-  --ib-highlight: #f0f4f8;
-}
+const HOURS = ['08.00','09.00','10.00','11.00','12.00','13.00','14.00','15.00','16.00','17.00','18.00','19.00','20.00','21.00','22.00','23.00','00.00','01.00','02.00'];
+const DAY_LABELS = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'];
+const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 
-/* ── 3-Column Grid ── */
-.ib-layout {
-  display: grid;
-  grid-template-columns: 320px 1fr 300px;
-  gap: 20px;
-  width: 100%;
-  align-items: start;
-  color: var(--ib-text);
-}
+const defaultActivities = [
+  { id: 'a1', name: 'Prague', desc: 'Haha oh man', emoji: '🔥', time: '12m', color: '#3B5F8A' },
+  { id: 'a2', name: 'Rome', desc: 'woohoooo', time: '24m', color: '#E8933A' },
+  { id: 'a3', name: 'Dublin', desc: "Haha that's terrifying", emoji: '😂', time: '1h', color: '#3B5F8A' },
+  { id: 'a4', name: 'Colosseum', desc: 'Haha oh man', emoji: '🔥', time: '12m', color: '#3B5F8A' },
+  { id: 'a5', name: 'Pantheon', desc: 'woohoooo', time: '24m', color: '#E8933A' },
+  { id: 'a6', name: "Saint Peter's Basilica", desc: "Haha that's terrifying", emoji: '😄', time: '1h', color: '#3B5F8A' },
+];
 
-/* ════════════════════════════════════════════
-   LEFT: Calendar Card
-   ════════════════════════════════════════════ */
-.ib-calendar {
-  background: var(--ib-card);
-  border: 1px solid var(--ib-card-border);
-  border-radius: 18px;
-  padding: 22px;
-  box-shadow: var(--ib-card-shadow);
-}
+const ItineraryBuilder = ({ tripId = null, onSave = null }) => {
+  // ── Calendar state ────────────────────────────────────────────────────────
+  const [calYear, setCalYear] = useState(2021);
+  const [calMonth, setCalMonth] = useState(1); // Feb
+  const [rangeStart, setRangeStart] = useState(23);
+  const [rangeEnd, setRangeEnd] = useState(27);
+  const [picking, setPicking] = useState(false);
 
-.ib-cal__header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 18px;
-}
+  // ── Week state ────────────────────────────────────────────────────────────
+  const weekDays = [
+    { num: 18, label: 'Mo' }, { num: 19, label: 'Tu' }, { num: 20, label: 'Wed' },
+    { num: 21, label: 'Th' }, { num: 22, label: 'Fr' }, { num: 23, label: 'Sa' }, { num: 24, label: 'Su' },
+  ];
+  const [activeDay, setActiveDay] = useState(21);
 
-.ib-cal__title {
-  font-size: 15px;
-  font-weight: 600;
-  color: var(--ib-text);
-  margin: 0;
-}
+  // ── Schedule state ────────────────────────────────────────────────────────
+  const [blocks, setBlocks] = useState({
+    '08.00': { id: 's1', text: 'Rapat dengan Bruce Wayne' },
+    '13.00': { id: 's2', text: 'Test wawasan kebangasaan di Dusun Wakanda' },
+  });
 
-.ib-cal__arrows {
-  display: flex;
-  gap: 6px;
-}
+  // ── Panel state ───────────────────────────────────────────────────────────
+  const [search, setSearch] = useState('');
+  const [panelMode, setPanelMode] = useState('recommend');
 
-.ib-cal__arrow {
-  width: 26px;
-  height: 26px;
-  border-radius: 6px;
-  border: none;
-  background: var(--ib-input-bg);
-  color: var(--ib-text-muted);
-  font-size: 16px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s;
-  font-family: inherit;
-}
+  // ── Drag state ────────────────────────────────────────────────────────────
+  const [dragInfo, setDragInfo] = useState(null);
+  const [overSlot, setOverSlot] = useState(null);
 
-.ib-cal__arrow:hover {
-  background: var(--ib-divider);
-  color: var(--ib-text);
-}
+  // ── Calendar logic ────────────────────────────────────────────────────────
+  const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
+  const firstDay = (() => { const d = new Date(calYear, calMonth, 1).getDay(); return d === 0 ? 6 : d - 1; })();
+  const prevDays = new Date(calYear, calMonth, 0).getDate();
+  const cells = firstDay + daysInMonth;
+  const overflow = cells % 7 === 0 ? 0 : 7 - (cells % 7);
 
-.ib-cal__grid {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap: 2px;
-  text-align: center;
-}
+  const goPrev = () => calMonth === 0 ? (setCalMonth(11), setCalYear(calYear - 1)) : setCalMonth(calMonth - 1);
+  const goNext = () => calMonth === 11 ? (setCalMonth(0), setCalYear(calYear + 1)) : setCalMonth(calMonth + 1);
 
-.ib-cal__head {
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--ib-text-muted);
-  padding: 6px 0;
-}
+  const clickDay = (d) => {
+    if (!picking) { setRangeStart(d); setRangeEnd(d); setPicking(true); }
+    else { const s = Math.min(rangeStart, d); const e = Math.max(rangeStart, d); setRangeStart(s); setRangeEnd(e); setPicking(false); }
+  };
 
-.ib-cal__day {
-  width: 36px;
-  height: 36px;
-  margin: 0 auto;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--ib-text);
-  cursor: pointer;
-  transition: all 0.15s;
-  user-select: none;
-}
+  const dayClass = (d) => {
+    if (d === rangeStart) return 'ib-cal__day ib-cal__day--start';
+    if (d === rangeEnd) return 'ib-cal__day ib-cal__day--end';
+    if (d > rangeStart && d < rangeEnd) return 'ib-cal__day ib-cal__day--range';
+    return 'ib-cal__day';
+  };
 
-.ib-cal__day:hover {
-  background: var(--ib-input-bg);
-}
+  // ── Drag from panel ───────────────────────────────────────────────────────
+  const panelDragStart = (e, act) => {
+    setDragInfo({ type: 'panel', name: act.name, id: act.id });
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', act.id);
+  };
 
-.ib-cal__day--other {
-  color: var(--ib-day-other);
-  cursor: default;
-}
+  // ── Drag from schedule ────────────────────────────────────────────────────
+  const blockDragStart = (e, timeKey, block) => {
+    setDragInfo({ type: 'block', id: block.id, text: block.text, from: timeKey });
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', block.id);
+  };
 
-.ib-cal__day--other:hover {
-  background: transparent;
-}
+  // ── Drop on slot ──────────────────────────────────────────────────────────
+  const slotDrop = useCallback((e, timeKey) => {
+    e.preventDefault();
+    setOverSlot(null);
+    if (!dragInfo) return;
 
-.ib-cal__day--start {
-  background: var(--ib-blue-light);
-  color: #fff;
-  font-weight: 700;
-}
+    if (dragInfo.type === 'panel') {
+      setBlocks(prev => ({ ...prev, [timeKey]: { id: 'sb-' + Date.now(), text: dragInfo.name } }));
+    } else if (dragInfo.type === 'block') {
+      setBlocks(prev => {
+        const n = { ...prev };
+        if (dragInfo.from) delete n[dragInfo.from];
+        n[timeKey] = { id: dragInfo.id, text: dragInfo.text };
+        return n;
+      });
+    }
+    setDragInfo(null);
+  }, [dragInfo]);
 
-.ib-cal__day--end {
-  background: var(--ib-accent);
-  color: #fff;
-  font-weight: 700;
-}
+  const removeBlock = (k) => setBlocks(prev => { const n = { ...prev }; delete n[k]; return n; });
 
-.ib-cal__day--range {
-  background: var(--ib-range-bg);
-  color: var(--ib-range-text);
-  border-radius: 8px;
-}
+  // ── Filter activities ─────────────────────────────────────────────────────
+  const filtered = defaultActivities.filter(a =>
+    a.name.toLowerCase().includes(search.toLowerCase()) ||
+    a.desc.toLowerCase().includes(search.toLowerCase())
+  );
 
-/* ════════════════════════════════════════════
-   CENTER: Weekly Schedule
-   ════════════════════════════════════════════ */
-.ib-schedule {
-  min-height: 500px;
-}
+  return (
+    <div className="ib-layout">
 
-/* Week day bar */
-.ib-week {
-  display: flex;
-  gap: 0;
-  justify-content: center;
-  margin-bottom: 16px;
-}
+      {/* ═══ LEFT: Calendar ═══ */}
+      <div className="ib-calendar">
+        <div className="ib-cal__header">
+          <h3 className="ib-cal__title">{MONTHS[calMonth]} {calYear}</h3>
+          <div className="ib-cal__arrows">
+            <button className="ib-cal__arrow" onClick={goPrev}>&lsaquo;</button>
+            <button className="ib-cal__arrow" onClick={goNext}>&rsaquo;</button>
+          </div>
+        </div>
+        <div className="ib-cal__grid">
+          {DAY_LABELS.map(d => <div key={d} className="ib-cal__head">{d}</div>)}
+          {Array.from({ length: firstDay }, (_, i) => (
+            <div key={'p' + i} className="ib-cal__day ib-cal__day--other">{prevDays - firstDay + 1 + i}</div>
+          ))}
+          {Array.from({ length: daysInMonth }, (_, i) => (
+            <div key={i + 1} className={dayClass(i + 1)} onClick={() => clickDay(i + 1)}>{i + 1}</div>
+          ))}
+          {Array.from({ length: overflow }, (_, i) => (
+            <div key={'n' + i} className="ib-cal__day ib-cal__day--other">{i + 1}</div>
+          ))}
+        </div>
+      </div>
 
-.ib-week__day {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 2px;
-  padding: 8px 14px;
-  cursor: pointer;
-  border-radius: 12px;
-  transition: all 0.2s;
-}
+      {/* ═══ CENTER: Schedule ═══ */}
+      <div className="ib-schedule">
+        <div className="ib-week">
+          {weekDays.map(d => (
+            <div key={d.num} className={`ib-week__day${activeDay === d.num ? ' ib-week__day--active' : ''}`}
+              onClick={() => setActiveDay(d.num)}>
+              <span className="ib-week__num">{d.num}</span>
+              <span className="ib-week__label">{d.label}</span>
+            </div>
+          ))}
+        </div>
+        <h4 className="ib-schedule__title">Schedule Today</h4>
+        <div className="ib-timeslots">
+          {HOURS.map(h => (
+            <div key={h} className="ib-timerow">
+              <span className="ib-timerow__label">{h}</span>
+              <div className={`ib-timerow__slot${overSlot === h ? ' ib-timerow__slot--over' : ''}`}
+                onDragOver={e => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; }}
+                onDragEnter={e => { e.preventDefault(); setOverSlot(h); }}
+                onDragLeave={e => { if (!e.currentTarget.contains(e.relatedTarget)) setOverSlot(null); }}
+                onDrop={e => slotDrop(e, h)}>
+                {blocks[h] && (
+                  <div className="ib-block" draggable onDragStart={e => blockDragStart(e, h, blocks[h])}>
+                    <span className="ib-block__text">{blocks[h].text}</span>
+                    <button className="ib-block__x" onClick={() => removeBlock(h)}>&times;</button>
+                  </div>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
 
-.ib-week__day:hover {
-  background: var(--ib-input-bg);
-}
+      {/* ═══ RIGHT: Activities ═══ */}
+      <div className="ib-panel">
+        <div className="ib-panel__toggles">
+          <button className={`ib-panel__tog${panelMode === 'recommend' ? ' ib-panel__tog--on' : ''}`}
+            onClick={() => setPanelMode('recommend')}>Recommend</button>
+          <button className={`ib-panel__tog${panelMode === 'recent' ? ' ib-panel__tog--on' : ''}`}
+            onClick={() => setPanelMode('recent')}>Recent</button>
+        </div>
+        <input className="ib-panel__search" type="text" placeholder="search activities"
+          value={search} onChange={e => setSearch(e.target.value)} />
+        <div className="ib-panel__list">
+          {filtered.map(a => (
+            <div key={a.id} className="ib-act" draggable onDragStart={e => panelDragStart(e, a)}>
+              <div className="ib-act__icon" style={{ backgroundColor: a.color }}></div>
+              <div className="ib-act__info">
+                <div className="ib-act__name">{a.name}</div>
+                <div className="ib-act__desc">{a.desc} {a.emoji || ''}</div>
+              </div>
+              <span className="ib-act__time">{a.time}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
 
-.ib-week__num {
-  font-size: 17px;
-  font-weight: 700;
-  color: var(--ib-text);
-}
-
-.ib-week__label {
-  font-size: 11px;
-  font-weight: 500;
-  color: var(--ib-text-muted);
-}
-
-.ib-week__day--active {
-  background: var(--ib-accent);
-  border-radius: 14px;
-  position: relative;
-}
-
-.ib-week__day--active .ib-week__num,
-.ib-week__day--active .ib-week__label {
-  color: #fff;
-}
-
-.ib-week__day--active::after {
-  content: '';
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  background: #fff;
-  position: absolute;
-  bottom: 5px;
-}
-
-/* Schedule title */
-.ib-schedule__title {
-  font-size: 15px;
-  font-weight: 700;
-  color: var(--ib-text);
-  margin: 0 0 14px 0;
-  padding-bottom: 10px;
-  border-bottom: 1px solid var(--ib-divider);
-}
-
-/* Time slots */
-.ib-timeslots {
-  display: flex;
-  flex-direction: column;
-}
-
-.ib-timerow {
-  display: flex;
-  align-items: flex-start;
-  min-height: 48px;
-  position: relative;
-}
-
-.ib-timerow::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 48px;
-  right: 0;
-  height: 1px;
-  background: var(--ib-divider);
-}
-
-.ib-timerow__label {
-  width: 48px;
-  flex-shrink: 0;
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--ib-text-muted);
-  padding-top: 2px;
-}
-
-.ib-timerow__slot {
-  flex: 1;
-  min-height: 48px;
-  padding: 2px 0;
-  border-radius: 8px;
-  transition: all 0.2s;
-}
-
-.ib-timerow__slot--over {
-  background: rgba(232, 147, 58, 0.1);
-  outline: 2px dashed var(--ib-accent);
-  outline-offset: -2px;
-}
-
-/* Activity blocks in schedule */
-.ib-block {
-  background: var(--ib-block-bg);
-  color: var(--ib-block-text);
-  border-radius: 10px;
-  padding: 10px 14px;
-  font-size: 13px;
-  font-weight: 500;
-  line-height: 1.4;
-  cursor: grab;
-  transition: all 0.2s;
-  margin: 2px 0;
-  position: relative;
-  display: flex;
-  align-items: flex-start;
-  gap: 8px;
-}
-
-.ib-block:active {
-  cursor: grabbing;
-}
-
-.ib-block:hover {
-  box-shadow: 0 4px 12px rgba(232, 147, 58, 0.25);
-  transform: translateY(-1px);
-}
-
-.ib-block__text {
-  flex: 1;
-}
-
-.ib-block__x {
-  background: rgba(255,255,255,0.3);
-  border: none;
-  color: #fff;
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
-  font-size: 12px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  opacity: 0;
-  transition: opacity 0.2s;
-  flex-shrink: 0;
-  margin-top: 1px;
-}
-
-.ib-block:hover .ib-block__x {
-  opacity: 1;
-}
-
-.ib-block__x:hover {
-  background: rgba(255,255,255,0.5);
-}
-
-/* ════════════════════════════════════════════
-   RIGHT: Activities Panel
-   ════════════════════════════════════════════ */
-.ib-panel {
-  background: var(--ib-card);
-  border: 1px solid var(--ib-card-border);
-  border-radius: 18px;
-  padding: 20px;
-  box-shadow: var(--ib-card-shadow);
-}
-
-.ib-panel__toggles {
-  display: flex;
-  justify-content: center;
-  gap: 6px;
-  margin-bottom: 16px;
-}
-
-.ib-panel__tog {
-  padding: 10px 18px;
-  border-radius: 20px;
-  border: none;
-  background: var(--ib-blue);
-  color: #fff;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  font-family: inherit;
-  transition: all 0.2s;
-  opacity: 0.6;
-}
-
-.ib-panel__tog--on {
-  background: var(--ib-accent);
-  opacity: 1;
-  box-shadow: 0 2px 8px rgba(232, 147, 58, 0.25);
-}
-
-.ib-panel__tog:hover {
-  opacity: 1;
-}
-
-.ib-panel__search {
-  width: 100%;
-  padding: 10px 14px;
-  border-radius: 10px;
-  border: 1px solid var(--ib-input-border);
-  background: var(--ib-input-bg);
-  color: var(--ib-text);
-  font-size: 13px;
-  font-family: inherit;
-  margin-bottom: 14px;
-  transition: all 0.2s;
-}
-
-.ib-panel__search:focus {
-  outline: none;
-  border-color: var(--ib-blue-light);
-  box-shadow: 0 0 0 3px rgba(74,124,191,0.15);
-}
-
-.ib-panel__search::placeholder {
-  color: var(--ib-text-muted);
-}
-
-.ib-panel__list {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-/* Activity items */
-.ib-act {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 12px;
-  border-radius: 10px;
-  cursor: grab;
-  transition: all 0.2s;
-  border: 1px solid transparent;
-}
-
-.ib-act:active {
-  cursor: grabbing;
-}
-
-.ib-act:hover {
-  background: var(--ib-highlight);
-  border-color: var(--ib-card-border);
-}
-
-.ib-act__icon {
-  width: 40px;
-  height: 40px;
-  border-radius: 10px;
-  flex-shrink: 0;
-}
-
-.ib-act__info {
-  flex: 1;
-  min-width: 0;
-}
-
-.ib-act__name {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--ib-text);
-}
-
-.ib-act__desc {
-  font-size: 11px;
-  color: var(--ib-text-muted);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.ib-act__time {
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--ib-text-muted);
-  flex-shrink: 0;
-}
-
-/* ── Responsive ── */
-@media (max-width: 1100px) {
-  .ib-layout {
-    grid-template-columns: 1fr 1fr;
-  }
-  .ib-calendar {
-    grid-column: 1 / -1;
-  }
-}
-
-@media (max-width: 768px) {
-  .ib-layout {
-    grid-template-columns: 1fr;
-  }
-}
+export default ItineraryBuilder;
