@@ -5,6 +5,7 @@ import path from 'path';
 export default defineConfig({
   plugins: [react()],
   build: {
+    emptyOutDir: false,
     rollupOptions: {
       input: {
         groupTabs: path.resolve(__dirname, 'client/src/groupTabs.jsx'),
