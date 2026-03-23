@@ -1,46 +1,71 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Profile — Atlasphere</title>
-  <link rel="stylesheet" href="/css/styles.css">
-</head>
-<body>
+<html lang="en" data-theme="light">
+  <head>
+    <meta charset="UTF-8">
+    <title>Profile Atlasphere</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/css/styles.css">
+  </head>
+  <body>
+    <%- include('partials/navbar', { user: typeof user !== 'undefined' ? user : null }) %>
 
-<%- include('partials/navbar', { user: typeof user !== 'undefined' ? user : null }) %>
+    <main class="profile-main">
+      <h1>Profile</h1>
 
-<div class="profile-page">
-  <h1>Profile</h1>
+      <div class="profile-avatar">
+        <img src="<%= user && user.profile_image ? user.profile_image : '/images/default-avatar.png' %>"
+          alt="profile picture" class="avatar-img"
+          onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
+        <div class="avatar-placeholder">
+          <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="50" cy="35" r="20" fill="#9ab"/>
+            <ellipse cx="50" cy="85" rx="30" ry="25" fill="#9ab"/>
+          </svg>
+        </div>
+      </div>
 
-  <figure class="iprofileImg">
-    <img class="personalProfileImg"
-         src="<%= (typeof user !== 'undefined' && user && user.profile_image) ? user.profile_image : '' %>"
-         alt="Profile picture"
-         onerror="this.style.display='none'">
-  </figure>
+      <div class="username-pill">
+        <%= user ? user.username : 'Username' %>
+      </div>
 
-  <div class="username-pill">
-    <%= (typeof user !== 'undefined' && user) ? (user.username || user.name) : 'Guest' %>
-  </div>
+      <div class="stats-row">
+        <div class="stat">
+          <p>Visited:</p>
+          <div class="flag-row">
+            <% if (user && user.visitedCountries && user.visitedCountries.length > 0) { %>
+              <% user.visitedCountries.forEach(function(flag) { %>
+                <span class="flag"><%= flag %></span>
+              <% }) %>
+            <% } else { %>
+              <span class="flag">🇮🇪</span>
+              <span class="flag">🇦🇹</span>
+              <span class="flag">🇮🇹</span>
+            <% } %>
+          </div>
+        </div>
 
-  <div class="stats-row">
-    <div class="stat">
-      <p>Countries visited</p>
-      <span><%= (typeof user !== 'undefined' && user && user.countries_visited) ? user.countries_visited : 0 %></span>
-    </div>
-    <div class="stat">
-      <p>Cities visited</p>
-      <span><%= (typeof user !== 'undefined' && user && user.cities_visited) ? user.cities_visited : 0 %></span>
-    </div>
-    <div class="stat">
-      <p>Groups created</p>
-      <span><%= (typeof user !== 'undefined' && user && user.groups_created) ? user.groups_created : 0 %></span>
-    </div>
-  </div>
-</div>
+        <div class="stat">
+          <p>Planning to visit:</p>
+          <div class="flag-row">
+            <% if (user && user.planningCountries && user.planningCountries.length > 0) { %>
+              <% user.planningCountries.forEach(function(flag) { %>
+                <span class="flag"><%= flag %></span>
+              <% }) %>
+            <% } else { %>
+              <span class="flag">🏴󠁧󠁢󠁳󠁣󠁴󠁿</span>
+              <span class="flag">🇳🇱</span>
+              <span class="flag">🇩🇪</span>
+            <% } %>
+          </div>
+        </div>
 
-<%- include('partials/footer') %>
+        <div class="stat">
+          <p>Number of Created Groups</p>
+          <span class="stat-number"><%= user ? (user.groups_created || 0) : 4 %></span>
+        </div>
+      </div>
+    </main>
 
-</body>
+    <%- include('partials/footer') %>
+  </body>
 </html>
