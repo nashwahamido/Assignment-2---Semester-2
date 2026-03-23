@@ -1,21 +1,176 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Settings — Atlasphere</title>
+  <title>Settings Atlasphere</title>
   <link rel="stylesheet" href="/css/styles.css">
+  <link rel="stylesheet" href="/css/settings.css">
 </head>
 <body>
 
 <%- include('partials/navbar', { user: typeof user !== 'undefined' ? user : null }) %>
 
-<div class="profile-page">
+<div class="settings-page">
   <h1>Settings</h1>
-  <p style="color: var(--text-secondary);">Settings page coming soon.</p>
+
+  <div class="settings-container">
+
+    <!-- Left sidebar tabs -->
+    <div class="settings-sidebar">
+      <button class="settings-tab active" onclick="showTab(event, 'manageInfo')">Manage your information</button>
+      <button class="settings-tab" onclick="showTab(event, 'visitedLocations')">Modify Visited Location</button>
+      <button class="settings-tab" onclick="showTab(event, 'manageGroups')">Manage your groups</button>
+      <button class="settings-tab" onclick="showTab(event, 'deleteAccount')">Delete Account</button>
+    </div>
+
+    <!-- Right content panels -->
+    <div class="settings-content">
+
+      <!-- Manage your information -->
+      <div id="manageInfo" class="settings-panel active">
+        <form action="/users/update" method="post">
+          <div class="form-group">
+            <label for="name">Name</label>
+            <input type="text" id="name" name="name" value="<%= user ? user.username : '' %>">
+          </div>
+          <div class="form-group">
+            <label for="email">Email</label>
+            <input type="email" id="email" name="email" value="<%= user ? user.email : '' %>">
+          </div>
+          <div class="form-group">
+            <label for="phone">Phone</label>
+            <div class="phone-row">
+              <input type="text" id="phoneCode" name="phoneCode" placeholder="+353" class="phone-code">
+              <input type="tel" id="phone" name="phone" value="<%= user ? (user.phone || '') : '' %>">
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="gender">Gender</label>
+            <select id="gender" name="gender">
+              <option value="">Select</option>
+              <option value="m" <%= user && user.gender === 'm' ? 'selected' : '' %>>Male</option>
+              <option value="f" <%= user && user.gender === 'f' ? 'selected' : '' %>>Female</option>
+              <option value="d" <%= user && user.gender === 'd' ? 'selected' : '' %>>Diverse</option>
+            </select>
+          </div>
+          <div class="form-actions">
+            <button type="submit" class="btn-save">Save</button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Modify visited locations -->
+      <div id="visitedLocations" class="settings-panel">
+        <form action="/users/update-locations" method="post">
+          <h3>Change Visited Countries:</h3>
+          <div class="search-bar">
+            <span class="search-icon">🔍</span>
+            <input type="search" name="countrysearch" placeholder="Search">
+            <span class="clear-icon">⊗</span>
+          </div>
+          <div class="location-grid">
+            <% const countryList = typeof countries !== 'undefined' && countries ? countries : [
+              { id: 'ie', name: 'Ireland', flag: '🇮🇪' },
+              { id: 'at', name: 'Austria', flag: '🇦🇹' },
+              { id: 'it', name: 'Italy', flag: '🇮🇹' },
+              { id: 'be', name: 'Belgium', flag: '🇧🇪' },
+              { id: 'fr', name: 'France', flag: '🇫🇷' },
+              { id: 'ch', name: 'Switzerland', flag: '🇨🇭' }
+            ]; %>
+            <% countryList.forEach(function(country) { %>
+              <label class="location-card">
+                <input type="checkbox" name="countries[]" value="<%= country.id %>"
+                  <%= user && user.visitedCountries && user.visitedCountries.includes(country.id) ? 'checked' : '' %>>
+                <span class="location-flag"><%= country.flag %></span>
+                <span class="location-name"><%= country.name %></span>
+              </label>
+            <% }) %>
+          </div>
+
+          <h3>Change Visited Cities:</h3>
+          <div class="search-bar">
+            <span class="search-icon">🔍</span>
+            <input type="search" name="citysearch" placeholder="Search">
+            <span class="clear-icon">⊗</span>
+          </div>
+          <div class="location-grid">
+            <% const cityList = typeof cities !== 'undefined' && cities ? cities : [
+              { id: 'dub', name: 'Dublin' },
+              { id: 'vie', name: 'Vienna' },
+              { id: 'rom', name: 'Rome' },
+              { id: 'bru', name: 'Brussels' },
+              { id: 'par', name: 'Paris' },
+              { id: 'zur', name: 'Zurich' }
+            ]; %>
+            <% cityList.forEach(function(city) { %>
+              <label class="location-card">
+                <input type="checkbox" name="cities[]" value="<%= city.id %>"
+                  <%= user && user.visitedCities && user.visitedCities.includes(city.id) ? 'checked' : '' %>>
+                <span class="location-flag">🏙️</span>
+                <span class="location-name"><%= city.name %></span>
+              </label>
+            <% }) %>
+          </div>
+          <div class="form-actions">
+            <button type="submit" class="btn-save">Save</button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Manage your groups -->
+      <div id="manageGroups" class="settings-panel">
+        <div class="search-bar">
+          <span class="search-icon">🔍</span>
+          <input type="search" name="groupsearch" placeholder="Search">
+          <span class="clear-icon">⊗</span>
+        </div>
+        <div class="groups-container">
+          <div class="groups-list">
+            <% const groupList = typeof groups !== 'undefined' && groups ? groups : [
+              { id: 1, name: 'Prague' },
+              { id: 2, name: 'Rome' },
+              { id: 3, name: 'Dublin' }
+            ]; %>
+            <% groupList.forEach(function(group) { %>
+              <div class="group-row">
+                <button class="group-name-btn"><%= group.name %></button>
+              </div>
+            <% }) %>
+          </div>
+          <div class="group-actions">
+            <button class="btn-action">Delete Group</button>
+            <button class="btn-action">Change Name</button>
+            <button class="btn-action">Modify Interests</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Delete account -->
+      <div id="deleteAccount" class="settings-panel">
+        <p class="delete-msg">Do you wish to delete your Atlasphere account?</p>
+        <div class="delete-actions">
+          <form action="/users/delete" method="post" style="display:inline">
+            <button type="submit" class="btn-confirm">Confirm</button>
+          </form>
+          <button class="btn-cancel" onclick="showTab(event, 'manageInfo')">Cancel</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
 </div>
 
 <%- include('partials/footer') %>
+
+<script>
+  function showTab(e, tabId) {
+    document.querySelectorAll('.settings-panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.settings-tab').forEach(t => t.classList.remove('active'));
+    document.getElementById(tabId).classList.add('active');
+    e.target.classList.add('active');
+  }
+</script>
 
 </body>
 </html>
