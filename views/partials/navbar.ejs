@@ -15,6 +15,12 @@
   </div>
 
   <div class="navbar-right">
+    <label class="theme-switch" aria-label="Toggle dark/light mode">
+      <input type="checkbox" id="themeToggle">
+      <div class="theme-switch__track"></div>
+      <div class="theme-switch__knob"></div>
+    </label>
+
     <% if (typeof user !== 'undefined' && user) { %>
       <a href="/auth/logout" class="btn btn-primary btn-sm">Sign out</a>
     <% } else { %>
@@ -22,3 +28,18 @@
     <% } %>
   </div>
 </nav>
+
+<script>
+  (function() {
+    const toggle = document.getElementById('themeToggle');
+    const html = document.documentElement;
+    const saved = localStorage.getItem('atlasphere-theme') || 'light';
+    html.setAttribute('data-theme', saved);
+    if (saved === 'light') toggle.checked = true;
+    toggle.addEventListener('change', () => {
+      const next = toggle.checked ? 'light' : 'dark';
+      html.setAttribute('data-theme', next);
+      localStorage.setItem('atlasphere-theme', next);
+    });
+  })();
+</script>
