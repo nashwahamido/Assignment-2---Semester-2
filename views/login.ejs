@@ -4,25 +4,83 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Sign In — Atlasphere</title>
+
+  <style>
+    .lp-btn {
+      display: inline-flex; align-items: center; justify-content: center;
+      padding: 14px 48px; border-radius: 30px; font-weight: 600; font-size: 1.2rem;
+      text-decoration: none; cursor: pointer; transition: all 0.3s ease;
+      min-width: 160px; font-family: var(--font);
+      margin: 10px;
+    }
+
+    .lp-btn--orange {
+      background: #E8933A; color: #fff; border: 2px solid #E8933A;
+    }
+
+    .lp-btn--orange:hover {
+      background: #D4822F; border-color: #D4822F;
+      transform: translateY(-2px); box-shadow: 0 6px 20px rgba(232,147,58,0.35);
+    }
+
+    #loginMainImg {
+      background-image: url("/images/pietro-de-grandi-T7K4aEPoGGk-unsplash.jpg");
+      height: 100vh;
+      background-position: center;
+      background-repeat: no-repeat;
+      background-size: cover;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    #loginContainer {
+      width: 50%;
+      padding: 10px;
+      border-radius: 10px;
+      background-color: rgba(247, 250, 255, 0.5);
+      color: #111111;
+      text-align: center;
+    }
+    #loginh1 {
+      font-size: 2rem;
+    }
+    .labelStyle {
+      font-size: 1.1rem;
+      font-weight: bold;
+    }
+    input {
+      width: 55%;
+      padding: 12px;
+      margin: 8px 0;
+      display: inline-block;
+      border: 1px solid #F7FAFF;
+      border-radius: 4px;
+      box-sizing: border-box;
+    }    
+
+  </style>
+
 </head>
 <body>
 
 <%- include('partials/navbar', { user: null }) %>
 
-<main>
-  <h1>Sign In</h1>
+<main id="loginMainImg">
+  <div id="loginContainer">
+    <h1 id="loginh1">Sign In</h1>
 
-  <form action="/auth/login" method="post">
-    <label for="email">Email</label>
-    <input type="email" id="email" name="email" placeholder="Enter your email" required>
+    <form action="/auth/login" method="post">
+      <label for="email" class="labelStyle">Email: </label>
+      <input type="email" id="email" name="email" placeholder="Enter your email" required><br>
 
-    <label for="password">Password</label>
-    <input type="password" id="password" name="password" placeholder="Enter your password" required>
+      <label for="password" class="labelStyle">Password: </label>
+      <input type="password" id="password" name="password" placeholder="Enter your password" required><br>
 
-    <button type="submit">Sign in</button>
-  </form>
+      <button type="submit" class="lp-btn lp-btn--orange">Sign in</button>
+    </form>
 
-  <p>Don't have an account? <a href="/auth/register">Register</a></p>
+    <p>Don't have an account? <a href="/auth/register">Register</a></p>
+  </div>
 </main>
 
 </body>
