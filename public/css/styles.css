@@ -1,4 +1,6 @@
-*, *::before, *::after {
+*,
+*::before,
+*::after {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
@@ -13,10 +15,10 @@
   --text: #FFFFFF;
   --text-secondary: #aaa;
   --navbar-bg: #1a1a1a;
-  --navbar-border: rgba(255,255,255,0.08);
+  --navbar-border: rgba(255, 255, 255, 0.08);
   --card-bg: #1e1e1e;
   --input-bg: #2a2a2a;
-  --border: rgba(255,255,255,0.1);
+  --border: rgba(255, 255, 255, 0.1);
   --toggle-bg: #3B5068;
   --toggle-knob: #E4EAF2;
   --pill-bg: #2a2a2a;
@@ -28,17 +30,18 @@
   --text: #0B3856;
   --text-secondary: #555;
   --navbar-bg: #ffffff;
-  --navbar-border: rgba(0,0,0,0.08);
+  --navbar-border: rgba(0, 0, 0, 0.08);
   --card-bg: #ffffff;
   --input-bg: #dce6f0;
-  --border: rgba(0,0,0,0.1);
+  --border: rgba(0, 0, 0, 0.1);
   --toggle-bg: #3B5068;
   --toggle-knob: #E4EAF2;
   --pill-bg: #e8f0f7;
   --stat-color: #0B3856;
 }
 
-html, body {
+html,
+body {
   height: 100%;
 }
 
@@ -170,10 +173,10 @@ body {
   border-radius: 50%;
   background: var(--toggle-knob);
   transition: transform 0.3s ease;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
 }
 
-.theme-switch input:checked ~ .theme-switch__knob {
+.theme-switch input:checked~.theme-switch__knob {
   transform: translateX(26px);
 }
 
@@ -323,6 +326,7 @@ body {
   font-weight: bold;
   color: var(--text);
 }
+
 /* Atlasphere — Global Base Styles */
 /* @import url('https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700;800&display=swap'); */
 /* above is in the wrong place */
@@ -415,11 +419,9 @@ button, input, select, textarea { font-family: inherit; font-size: inherit; }
   content: "";
   position: absolute;
   inset: 0;
-  background: linear-gradient(
-    180deg,
-    rgba(5, 30, 48, 0.45) 0%,
-    rgba(5, 30, 48, 0.72) 100%
-  );
+  background: linear-gradient(180deg,
+      rgba(5, 30, 48, 0.45) 0%,
+      rgba(5, 30, 48, 0.72) 100%);
   z-index: 1;
 }
 
@@ -462,9 +464,9 @@ button, input, select, textarea { font-family: inherit; font-size: inherit; }
 .search-input input {
   width: 100%;
   padding: 14px 18px 14px 46px;
-  border: 1px solid rgba(255,255,255,0.18);
+  border: 1px solid rgba(255, 255, 255, 0.18);
   border-radius: 999px;
-  background: rgba(255,255,255,0.14);
+  background: rgba(255, 255, 255, 0.14);
   color: #fff;
   outline: none;
   font-size: 15px;
@@ -472,7 +474,7 @@ button, input, select, textarea { font-family: inherit; font-size: inherit; }
 }
 
 .search-input input::placeholder {
-  color: rgba(255,255,255,0.75);
+  color: rgba(255, 255, 255, 0.75);
 }
 
 .search-input input:focus {
@@ -498,8 +500,8 @@ button, input, select, textarea { font-family: inherit; font-size: inherit; }
 }
 
 .destination-card {
-  background: rgba(255,255,255,0.14);
-  border: 1px solid rgba(255,255,255,0.16);
+  background: rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.16);
   border-radius: 22px;
   padding: 18px 16px;
   cursor: pointer;
@@ -513,8 +515,8 @@ button, input, select, textarea { font-family: inherit; font-size: inherit; }
 
 .destination-card:hover {
   transform: translateY(-4px);
-  border-color: rgba(255,255,255,0.28);
-  box-shadow: 0 14px 30px rgba(0,0,0,0.18);
+  border-color: rgba(255, 255, 255, 0.28);
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.18);
 }
 
 .destination-card.selected {
@@ -526,7 +528,7 @@ button, input, select, textarea { font-family: inherit; font-size: inherit; }
 .card-img {
   height: 110px;
   border-radius: 16px;
-  background: rgba(255,255,255,0.12);
+  background: rgba(255, 255, 255, 0.12);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -551,13 +553,13 @@ button, input, select, textarea { font-family: inherit; font-size: inherit; }
 
 /* Secondary button */
 .btn-secondary {
-  background: rgba(255,255,255,0.15);
+  background: rgba(255, 255, 255, 0.15);
   color: #fff !important;
-  border: 1px solid rgba(255,255,255,0.18);
+  border: 1px solid rgba(255, 255, 255, 0.18);
 }
 
 .btn-secondary:hover {
-  background: rgba(255,255,255,0.24);
+  background: rgba(255, 255, 255, 0.24);
 }
 
 /* Slider page */
@@ -572,7 +574,7 @@ button, input, select, textarea { font-family: inherit; font-size: inherit; }
   appearance: none;
   height: 8px;
   border-radius: 999px;
-  background: rgba(255,255,255,0.28);
+  background: rgba(255, 255, 255, 0.28);
   outline: none;
 }
 
@@ -584,7 +586,7 @@ button, input, select, textarea { font-family: inherit; font-size: inherit; }
   background: #209EBB;
   cursor: pointer;
   border: 3px solid #fff;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.25);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
 }
 
 .slider-track::-moz-range-thumb {
@@ -594,7 +596,7 @@ button, input, select, textarea { font-family: inherit; font-size: inherit; }
   background: #209EBB;
   cursor: pointer;
   border: 3px solid #fff;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.25);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
 }
 
 .slider-value {
@@ -628,8 +630,8 @@ button, input, select, textarea { font-family: inherit; font-size: inherit; }
 .upload-circle {
   position: relative;
   border-radius: 50%;
-  background: rgba(255,255,255,0.14);
-  border: 2px dashed rgba(255,255,255,0.45);
+  background: rgba(255, 255, 255, 0.14);
+  border: 2px dashed rgba(255, 255, 255, 0.45);
   display: flex;
   align-items: center;
   justify-content: center;
