@@ -1,35 +1,26 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Profile Setup — Atlasphere</title>
+  <title>Profile Setup - Atlasphere</title>
+  <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/css/styles.css">
 </head>
 <body>
-
 <%- include('partials/navbar', { user: typeof user !== 'undefined' ? user : null }) %>
-
-<!-- Profile Setup: Upload Picture — matches Figma -->
-<div class="setup-page">
-  <div class="setup-bg">
-    <img src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1600&q=80" alt="Mountain sunset landscape">
-  </div>
-
-  <div class="setup-content text-center">
-    <h1>Show People Your Profile</h1>
-
-    <div class="upload-circle">
-      <span class="upload-icon">🖼️</span>
-      <input type="file" accept="image/*" id="profilePicUpload">
-    </div>
-
-    <div class="setup-actions">
-      <a href="/setup/countries" class="btn btn-primary">Upload Profile Picture</a>
-      <a href="/setup/countries" class="skip-link">Skip</a>
+<div class="framed-page">
+  <div class="framed-box">
+    <div class="framed-box__bg"><img src="/images/setup-desert.jpg" alt="Desert"></div>
+    <div class="framed-box__content" style="display:flex;flex-direction:column;align-items:center;justify-content:center;">
+      <div class="setup-content">
+        <h1>Show People Your Profile</h1>
+        <div class="upload-circle-lg"><span class="upload-icon">&#128444;</span><input type="file" accept="image/*"></div>
+        <div class="setup-actions"><a href="/setup/countries" class="upload-link">Upload Profile Picture</a><a href="/setup/countries" class="skip-btn">Skip</a></div>
+      </div>
     </div>
   </div>
 </div>
-
+<script>var s=localStorage.getItem('atlasphere-theme');if(s)document.documentElement.setAttribute('data-theme',s);</script>
 </body>
 </html>

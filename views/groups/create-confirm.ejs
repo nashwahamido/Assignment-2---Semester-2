@@ -1,100 +1,53 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Group Created - Atlasphere</title>
+  <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/css/styles.css">
-  <style>
-    .confirm-page { position: relative; min-height: calc(100vh - 60px); overflow: hidden; }
-    .confirm-bg { position: absolute; inset: 0; z-index: 0; }
-    .confirm-bg img { width: 100%; height: 100%; object-fit: cover; }
-    .confirm-bg::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(5,30,48,0.45) 0%, rgba(5,30,48,0.75) 100%); }
-    .confirm-content { position: relative; z-index: 1; max-width: 800px; margin: 0 auto; padding: 60px 40px; }
-    .confirm-content h1 { font-size: 2rem; font-weight: 700; color: #fff; margin-bottom: 32px; line-height: 1.2; }
-
-    .invite-section { background: rgba(255,255,255,0.1); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.12); border-radius: 16px; padding: 28px; margin-bottom: 24px; }
-    .invite-section h3 { font-size: 16px; font-weight: 600; color: #fff; margin: 0 0 16px 0; }
-
-    .invite-form { display: flex; gap: 10px; margin-bottom: 16px; }
-    .invite-form input { flex: 1; padding: 12px 16px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.15); background: rgba(255,255,255,0.08); color: #fff; font-size: 14px; font-family: inherit; }
-    .invite-form input::placeholder { color: rgba(255,255,255,0.4); }
-    .invite-form input:focus { outline: none; border-color: #E8933A; }
-    .invite-form button { padding: 12px 24px; border-radius: 10px; border: none; background: #E8933A; color: #fff; font-weight: 600; font-size: 14px; cursor: pointer; font-family: inherit; white-space: nowrap; }
-    .invite-form button:hover { background: #D4822F; }
-
-    .divider { color: rgba(255,255,255,0.5); font-size: 14px; margin: 16px 0; text-align: center; }
-
-    .share-link-box { display: flex; gap: 10px; align-items: center; }
-    .share-link-box input { flex: 1; padding: 12px 16px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.15); background: rgba(255,255,255,0.06); color: #fff; font-size: 13px; font-family: monospace; }
-    .share-link-box button { padding: 12px 20px; border-radius: 10px; border: none; background: #3B5F8A; color: #fff; font-weight: 600; font-size: 14px; cursor: pointer; font-family: inherit; white-space: nowrap; }
-    .share-link-box button:hover { background: #2B4C6F; }
-
-    .msg-success { background: rgba(34,197,94,0.15); color: #4ade80; padding: 10px 16px; border-radius: 8px; font-size: 14px; margin-bottom: 16px; }
-    .msg-error { background: rgba(239,68,68,0.15); color: #f87171; padding: 10px 16px; border-radius: 8px; font-size: 14px; margin-bottom: 16px; }
-
-    .go-btn { display: inline-block; padding: 14px 32px; border-radius: 30px; background: #E8933A; color: #fff; font-weight: 700; font-size: 16px; text-decoration: none; margin-top: 24px; }
-    .go-btn:hover { background: #D4822F; }
-
-    .copied-toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: #22c55e; color: #fff; padding: 10px 24px; border-radius: 20px; font-size: 14px; font-weight: 600; display: none; z-index: 999; }
-  </style>
 </head>
 <body>
-
 <%- include('../partials/navbar', { user: typeof user !== 'undefined' ? user : null }) %>
-
-<div class="confirm-page">
-  <div class="confirm-bg">
-    <img src="https://images.unsplash.com/photo-1509316785289-025f5b846b35?w=1600&q=80" alt="Desert landscape">
-  </div>
-
-  <div class="confirm-content">
-    <h1>Your &ldquo;<%= typeof group !== 'undefined' && group ? group.name : 'Trip' %>&rdquo; group<br>has been created!</h1>
-
-    <% if (typeof inviteSuccess !== 'undefined' && inviteSuccess) { %>
-      <div class="msg-success"><%= inviteSuccess %></div>
-    <% } %>
-    <% if (typeof inviteError !== 'undefined' && inviteError) { %>
-      <div class="msg-error"><%= inviteError %></div>
-    <% } %>
-
-    <!-- Invite by email -->
-    <div class="invite-section">
-      <h3>Invite a friend by email</h3>
-      <form class="invite-form" action="/groups/invite" method="post">
-        <input type="hidden" name="groupId" value="<%= typeof group !== 'undefined' && group ? group.id : '' %>">
-        <input type="email" name="friendEmail" placeholder="Enter your friend's email" required>
-        <button type="submit">Send Invite</button>
-      </form>
-
-      <div class="divider">or</div>
-
-      <!-- Share link -->
-      <h3>Share invite link</h3>
-      <div class="share-link-box">
-        <input type="text" id="inviteLinkInput" value="<%= typeof inviteLink !== 'undefined' ? inviteLink : '' %>" readonly>
-        <button type="button" onclick="copyLink()">Copy Link</button>
+<div class="framed-page">
+  <div class="framed-box">
+    <div class="framed-box__bg"><img src="/images/setup-desert.jpg" alt="Desert"></div>
+    <div class="framed-box__content">
+      <div class="gc-content">
+        <div class="gc-left">
+          <h1>Your &ldquo;<%= typeof group !== 'undefined' && group ? group.name : 'My Trip' %>&rdquo; group<br>has been created!</h1>
+          <% if (typeof inviteSuccess !== 'undefined' && inviteSuccess) { %><div class="msg-success gc-invite-msg"><%= inviteSuccess %></div><% } %>
+          <% if (typeof inviteError !== 'undefined' && inviteError) { %><div class="msg-error gc-invite-msg"><%= inviteError %></div><% } %>
+          <p class="gc-invite-label">Search for a friend</p>
+          <form action="/groups/invite" method="post" class="gc-search">
+            <input type="hidden" name="groupId" value="<%= typeof group !== 'undefined' && group ? group.id : '' %>">
+            <span>&#128269;</span>
+            <input type="email" name="friendEmail" placeholder="Search..." required>
+            <button type="submit" style="background:none;border:none;color:rgba(255,255,255,0.5);cursor:pointer;">&#10799;</button>
+          </form>
+          <p class="gc-or">or</p>
+          <button type="button" class="gc-share-btn" onclick="copyLink()">Share Link</button>
+          <input type="hidden" id="inviteLinkHidden" value="<%= typeof inviteLink !== 'undefined' ? inviteLink : '' %>">
+          <br>
+          <a href="/groups/<%= typeof group !== 'undefined' && group ? group.id : '1' %>" class="gc-go-btn">Skip to Group</a>
+        </div>
+        <div class="gc-right">
+          <div class="gc-upload-circle" id="uploadCircle">
+            <svg class="gc-img-icon" viewBox="0 0 24 24" fill="none"><rect x="2" y="2" width="20" height="20" rx="4" stroke="#9aa" stroke-width="1.5"/><path d="M2 16l5-5 4 4 3-3 8 8H6a4 4 0 01-4-4v0z" fill="#bcc"/><circle cx="8.5" cy="8.5" r="2" fill="#bcc"/></svg>
+            <img class="gc-preview" id="previewImg" alt="Preview">
+            <input type="file" accept="image/*" id="groupPicInput">
+          </div>
+          <a href="#" class="gc-upload-btn" onclick="document.getElementById('groupPicInput').click();return false;">Upload Profile Picture</a>
+        </div>
       </div>
     </div>
-
-    <a href="/groups/<%= typeof group !== 'undefined' && group ? group.id : '1' %>" class="go-btn">Go to Group</a>
   </div>
 </div>
-
 <div class="copied-toast" id="copiedToast">Link copied!</div>
-
 <script>
-  function copyLink() {
-    var input = document.getElementById("inviteLinkInput");
-    input.select();
-    input.setSelectionRange(0, 99999);
-    navigator.clipboard.writeText(input.value).then(function() {
-      var toast = document.getElementById("copiedToast");
-      toast.style.display = "block";
-      setTimeout(function() { toast.style.display = "none"; }, 2000);
-    });
-  }
+  var s=localStorage.getItem('atlasphere-theme');if(s)document.documentElement.setAttribute('data-theme',s);
+  function copyLink(){var l=document.getElementById('inviteLinkHidden').value;if(!l)return;navigator.clipboard.writeText(l).then(function(){var t=document.getElementById('copiedToast');t.style.display='block';setTimeout(function(){t.style.display='none';},2000);});}
+  document.getElementById('groupPicInput').addEventListener('change',function(e){var f=e.target.files[0];if(!f)return;var r=new FileReader();r.onload=function(ev){var i=document.getElementById('previewImg');i.src=ev.target.result;i.style.display='block';};r.readAsDataURL(f);});
 </script>
-
 </body>
 </html>

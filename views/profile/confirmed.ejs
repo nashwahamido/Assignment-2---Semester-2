@@ -1,54 +1,25 @@
 <!DOCTYPE html>
-<html lang="en">
-  <head>
-    <title>Profile confirmation</title>
-    <meta charset="UTF-8">
-    <meta name="description" content="Profile confirmation, profile created">
-    <meta name="keywords" content="Profile confirmation, profile created">
-    <meta name="author" content="Group 4">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="/css/styles.css">
-  </head>
-  <body>
-    <%- include('partials/navbar') %>
-    <header></header>
-    <main>
-      <section>
-        <h3>Your profile has been created, <%= user.username %>!</h3>
-        <p>Create a group and start planning your journey:</p>
-        <a href="/groups/create">Create a group</a><br>
-        <a href="/profile">Skip and go to your profile page</a>
-      </section>
-    </main>
-    <footer></footer>
-  </body>
-</html><!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Profile Created — Atlasphere</title>
+  <title>Profile Created - Atlasphere</title>
+  <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/css/styles.css">
 </head>
 <body>
-
 <%- include('../partials/navbar', { user: typeof user !== 'undefined' ? user : null }) %>
-
-<!-- Profile Created — matches Figma -->
-<div class="setup-page">
-  <div class="setup-bg">
-    <img src="https://images.unsplash.com/photo-1523531294919-4bcd7c65e216?w=1600&q=80" alt="Cinque Terre coastline">
-  </div>
-
-  <div class="setup-content">
-    <h1>Your profile has been created!</h1>
-
-    <div class="setup-actions" style="margin-top: 40px;">
-      <a href="/groups/create/country" class="btn btn-primary">Create a group</a>
-      <a href="/" class="btn btn-secondary">Skip</a>
+<div class="framed-page">
+  <div class="framed-box">
+    <div class="framed-box__bg"><img src="/images/profile-created-coast.jpg" alt="Coast"></div>
+    <div class="framed-box__content">
+      <div class="confirmed-content">
+        <h1>Your profile has been created!</h1>
+        <div class="setup-actions"><a href="/groups/create/country" class="btn-create">Create a group</a><a href="/" class="btn-skip">Skip</a></div>
+      </div>
     </div>
   </div>
 </div>
-
+<script>var s=localStorage.getItem('atlasphere-theme');if(s)document.documentElement.setAttribute('data-theme',s);</script>
 </body>
 </html>

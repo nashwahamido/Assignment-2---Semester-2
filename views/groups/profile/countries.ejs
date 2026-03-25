@@ -1,102 +1,42 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Countries Visited — Atlasphere</title>
+  <title>Countries Visited - Atlasphere</title>
+  <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/css/styles.css">
 </head>
 <body>
-
 <%- include('../../partials/navbar', { user: typeof user !== 'undefined' ? user : null }) %>
-
-<!-- What countries have you visited? — matches Figma -->
-<div class="setup-page">
-  <div class="setup-bg">
-    <img src="https://images.unsplash.com/photo-1501785888041-af3ef285b470?w=1600&q=80" alt="Mountain lake landscape">
-  </div>
-
-  <div class="setup-content">
-    <h1>What countries have you visited?</h1>
-
-    <div class="search-input">
-      <span class="search-icon">🔍</span>
-      <input type="text" id="countrySearch" placeholder="Search...">
-    </div>
-
-    <div class="location-grid" id="countryGrid">
-      <!-- These would be dynamically populated; sample data shown -->
-      <div class="location-card" data-country="ireland">
-        <img class="flag" src="https://flagcdn.com/w160/ie.png" alt="Ireland flag">
-        <span class="location-name">Ireland</span>
+<div class="framed-page">
+  <div class="framed-box">
+    <div class="framed-box__bg"><img src="/images/registration-lake.jpg" alt="Lake"></div>
+    <div class="framed-box__content">
+      <div class="sel-content">
+        <div class="sel-header"><h1>What countries have you visited?</h1><a href="/setup/cities" class="skip-btn">Skip</a></div>
+        <div class="sel-search"><span>&#128269;</span><input type="text" placeholder="Search" id="countrySearch"></div>
+        <form action="/setup/cities" method="get">
+          <div class="flag-grid">
+            <label class="flag-card" onclick="this.classList.toggle('selected')"><input type="checkbox" name="countries[]" value="ie"><span class="flag-card__img">&#127470;&#127466;</span><span class="flag-card__name">Ireland</span></label>
+            <label class="flag-card" onclick="this.classList.toggle('selected')"><input type="checkbox" name="countries[]" value="at"><span class="flag-card__img">&#127462;&#127481;</span><span class="flag-card__name">Austria</span></label>
+            <label class="flag-card" onclick="this.classList.toggle('selected')"><input type="checkbox" name="countries[]" value="it"><span class="flag-card__img">&#127470;&#127481;</span><span class="flag-card__name">Italy</span></label>
+            <label class="flag-card" onclick="this.classList.toggle('selected')"><input type="checkbox" name="countries[]" value="be"><span class="flag-card__img">&#127463;&#127466;</span><span class="flag-card__name">Belgium</span></label>
+            <label class="flag-card" onclick="this.classList.toggle('selected')"><input type="checkbox" name="countries[]" value="fr"><span class="flag-card__img">&#127467;&#127479;</span><span class="flag-card__name">France</span></label>
+            <label class="flag-card" onclick="this.classList.toggle('selected')"><input type="checkbox" name="countries[]" value="ch"><span class="flag-card__img">&#127464;&#127469;</span><span class="flag-card__name">Switzerland</span></label>
+            <label class="flag-card" onclick="this.classList.toggle('selected')"><input type="checkbox" name="countries[]" value="gb-eng"><span class="flag-card__img">&#127988;&#917607;&#917602;&#917605;&#917614;&#917607;&#917631;</span><span class="flag-card__name">England</span></label>
+            <label class="flag-card" onclick="this.classList.toggle('selected')"><input type="checkbox" name="countries[]" value="gb-sct"><span class="flag-card__img">&#127988;&#917607;&#917602;&#917619;&#917603;&#917620;&#917631;</span><span class="flag-card__name">Scotland</span></label>
+            <label class="flag-card" onclick="this.classList.toggle('selected')"><input type="checkbox" name="countries[]" value="nl"><span class="flag-card__img">&#127475;&#127473;</span><span class="flag-card__name">The Netherlands</span></label>
+            <label class="flag-card" onclick="this.classList.toggle('selected')"><input type="checkbox" name="countries[]" value="de"><span class="flag-card__img">&#127465;&#127466;</span><span class="flag-card__name">Germany</span></label>
+            <label class="flag-card" onclick="this.classList.toggle('selected')"><input type="checkbox" name="countries[]" value="fi"><span class="flag-card__img">&#127467;&#127470;</span><span class="flag-card__name">Finland</span></label>
+            <label class="flag-card" onclick="this.classList.toggle('selected')"><input type="checkbox" name="countries[]" value="se"><span class="flag-card__img">&#127480;&#127466;</span><span class="flag-card__name">Sweden</span></label>
+          </div>
+          <div class="sel-actions"><button type="submit" class="btn-next">Next</button></div>
+        </form>
       </div>
-      <div class="location-card" data-country="austria">
-        <img class="flag" src="https://flagcdn.com/w160/at.png" alt="Austria flag">
-        <span class="location-name">Austria</span>
-      </div>
-      <div class="location-card" data-country="italy">
-        <img class="flag" src="https://flagcdn.com/w160/it.png" alt="Italy flag">
-        <span class="location-name">Italy</span>
-      </div>
-      <div class="location-card" data-country="belgium">
-        <img class="flag" src="https://flagcdn.com/w160/be.png" alt="Belgium flag">
-        <span class="location-name">Belgium</span>
-      </div>
-      <div class="location-card" data-country="france">
-        <img class="flag" src="https://flagcdn.com/w160/fr.png" alt="France flag">
-        <span class="location-name">France</span>
-      </div>
-      <div class="location-card" data-country="switzerland">
-        <img class="flag" src="https://flagcdn.com/w160/ch.png" alt="Switzerland flag">
-        <span class="location-name">Switzerland</span>
-      </div>
-      <div class="location-card" data-country="england">
-        <img class="flag" src="https://flagcdn.com/w160/gb-eng.png" alt="England flag">
-        <span class="location-name">England</span>
-      </div>
-      <div class="location-card" data-country="scotland">
-        <img class="flag" src="https://flagcdn.com/w160/gb-sct.png" alt="Scotland flag">
-        <span class="location-name">Scotland</span>
-      </div>
-      <div class="location-card" data-country="netherlands">
-        <img class="flag" src="https://flagcdn.com/w160/nl.png" alt="Netherlands flag">
-        <span class="location-name">The Netherlands</span>
-      </div>
-      <div class="location-card" data-country="germany">
-        <img class="flag" src="https://flagcdn.com/w160/de.png" alt="Germany flag">
-        <span class="location-name">Germany</span>
-      </div>
-      <div class="location-card" data-country="finland">
-        <img class="flag" src="https://flagcdn.com/w160/fi.png" alt="Finland flag">
-        <span class="location-name">Finland</span>
-      </div>
-      <div class="location-card" data-country="sweden">
-        <img class="flag" src="https://flagcdn.com/w160/se.png" alt="Sweden flag">
-        <span class="location-name">Sweden</span>
-      </div>
-    </div>
-
-    <div class="setup-actions">
-      <a href="/setup/cities" class="btn btn-primary">Next</a>
-      <a href="/setup/cities" class="skip-link">Skip</a>
     </div>
   </div>
 </div>
-
-<script>
-  // Toggle card selection
-  document.querySelectorAll('.location-card').forEach(card => {
-    card.addEventListener('click', () => card.classList.toggle('selected'));
-  });
-  // Search filter
-  document.getElementById('countrySearch').addEventListener('input', (e) => {
-    const q = e.target.value.toLowerCase();
-    document.querySelectorAll('.location-card').forEach(card => {
-      const name = card.querySelector('.location-name').textContent.toLowerCase();
-      card.style.display = name.includes(q) ? '' : 'none';
-    });
-  });
-</script>
-
+<script>var s=localStorage.getItem('atlasphere-theme');if(s)document.documentElement.setAttribute('data-theme',s);document.getElementById('countrySearch').addEventListener('input',function(e){var v=e.target.value.toLowerCase();document.querySelectorAll('.flag-card').forEach(function(c){c.style.display=c.textContent.toLowerCase().includes(v)?'':'none';});});</script>
 </body>
 </html>
