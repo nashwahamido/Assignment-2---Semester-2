@@ -1,0 +1,6 @@
+/* Tab Switcher — Rounded pill with 3 icons */
+.ts { display: flex; justify-content: center; padding: 12px 0; }
+.ts__pill { display: flex; gap: 0; background: var(--ib-card, #fff); border-radius: 30px; padding: 6px; border: 1px solid var(--ib-divider, rgba(0,0,0,0.08)); box-shadow: 0 2px 12px rgba(0,0,0,0.08); }
+.ts__btn { width: 48px; height: 40px; border-radius: 20px; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+.ts__btn--active { background: var(--ib-highlight, #e8f0f7); }
+.ts__btn:hover { background: var(--ib-input-bg, #f3f4f6); }
