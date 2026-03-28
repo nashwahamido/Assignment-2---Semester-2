@@ -1,40 +1,55 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Verify Email - Atlasphere</title>
-  <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <title>Verify Email — Atlasphere</title>
   <link rel="stylesheet" href="/css/styles.css">
 </head>
 <body>
-<nav class="auth-nav"><a href="/" class="auth-nav__brand">Atlasphere</a><a href="/auth/login" class="auth-nav__btn">Log in</a></nav>
-<div class="framed-page">
-  <div class="framed-box">
-    <div class="framed-box__bg"><img src="/images/person-portrait.jpg" alt="person portrait"></div>
-    <div class="framed-box__content" style="display:flex;align-items:center;justify-content:center;">
-      <div class="auth-card">
-        <h1>We've sent you an email</h1>
-        <p class="subtitle">Enter the 6-digit code to verify your account</p>
-        <% if (typeof email !== 'undefined' && email) { %><span class="verify-email"><%= email %></span><% } %>
-        <% if (typeof error !== 'undefined' && error) { %><div class="msg-error"><%= error %></div><% } %>
-        <% if (typeof success !== 'undefined' && success) { %><div class="msg-success"><%= success %></div><% } %>
-        <form action="/auth/verify" method="post">
-          <div class="code-inputs">
-            <input type="text" maxlength="1" name="code1" autocomplete="off" autofocus required>
-            <input type="text" maxlength="1" name="code2" autocomplete="off" required>
-            <input type="text" maxlength="1" name="code3" autocomplete="off" required>
-            <input type="text" maxlength="1" name="code4" autocomplete="off" required>
-            <input type="text" maxlength="1" name="code5" autocomplete="off" required>
-            <input type="text" maxlength="1" name="code6" autocomplete="off" required>
-          </div>
-          <button type="submit" class="auth-submit">Verify</button>
-        </form>
-        <a href="/auth/resend-code" class="resend-link">Expired code? Send code again?</a>
+
+<%- include('partials/navbar', { user: null }) %>
+
+<!-- Verification Page — matches Figma wireframe -->
+<div class="auth-page">
+  <div class="auth-bg">
+    <img src="https://images.unsplash.com/photo-1511884642898-4c92249e20b6?w=1600&q=80" alt="Waterfall landscape">
+  </div>
+
+  <div class="auth-card verify-card">
+    <h1>We've sent you an email</h1>
+    <p class="verify-subtitle">Enter the 6-digit code to verify your account</p>
+
+    <form action="/auth/verify" method="post">
+      <div class="code-inputs">
+        <input type="text" maxlength="1" name="code1" autocomplete="off" autofocus>
+        <input type="text" maxlength="1" name="code2" autocomplete="off">
+        <input type="text" maxlength="1" name="code3" autocomplete="off">
+        <input type="text" maxlength="1" name="code4" autocomplete="off">
+        <input type="text" maxlength="1" name="code5" autocomplete="off">
+        <input type="text" maxlength="1" name="code6" autocomplete="off">
       </div>
+
+      <button type="submit" class="btn btn-primary">Verify</button>
+    </form>
+
+    <div class="auth-footer mt-2">
+      <p><a href="#" class="resend-link">Expired code? Send code again?</a></p>
     </div>
   </div>
 </div>
-<script>var s=localStorage.getItem('atlasphere-theme');if(s)document.documentElement.setAttribute('data-theme',s);document.querySelectorAll('.code-inputs input').forEach(function(input,i,inputs){input.addEventListener('input',function(e){if(e.target.value&&i<inputs.length-1)inputs[i+1].focus();});input.addEventListener('keydown',function(e){if(e.key==='Backspace'&&!e.target.value&&i>0)inputs[i-1].focus();});input.addEventListener('paste',function(e){e.preventDefault();var p=(e.clipboardData||window.clipboardData).getData('text').trim();if(p.length===6&&/^\d{6}$/.test(p)){inputs.forEach(function(inp,j){inp.value=p[j];});inputs[5].focus();}});});</script>
+
+<script>
+  // Auto-focus next input on code entry
+  document.querySelectorAll('.code-inputs input').forEach((input, i, inputs) => {
+    input.addEventListener('input', (e) => {
+      if (e.target.value && i < inputs.length - 1) inputs[i + 1].focus();
+    });
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Backspace' && !e.target.value && i > 0) inputs[i - 1].focus();
+    });
+  });
+</script>
+
 </body>
 </html>

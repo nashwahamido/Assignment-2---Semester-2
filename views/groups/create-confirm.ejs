@@ -1,53 +1,53 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Group Created - Atlasphere</title>
-  <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <title>Group Created — Atlasphere</title>
   <link rel="stylesheet" href="/css/styles.css">
 </head>
 <body>
+
 <%- include('../partials/navbar', { user: typeof user !== 'undefined' ? user : null }) %>
-<div class="framed-page">
-  <div class="framed-box">
-    <div class="framed-box__bg"><img src="/images/setup-desert.jpg" alt="Desert"></div>
-    <div class="framed-box__content">
-      <div class="gc-content">
-        <div class="gc-left">
-          <h1>Your &ldquo;<%= typeof group !== 'undefined' && group ? group.name : 'My Trip' %>&rdquo; group<br>has been created!</h1>
-          <% if (typeof inviteSuccess !== 'undefined' && inviteSuccess) { %><div class="msg-success gc-invite-msg"><%= inviteSuccess %></div><% } %>
-          <% if (typeof inviteError !== 'undefined' && inviteError) { %><div class="msg-error gc-invite-msg"><%= inviteError %></div><% } %>
-          <p class="gc-invite-label">Search for a friend</p>
-          <form action="/groups/invite" method="post" class="gc-search">
-            <input type="hidden" name="groupId" value="<%= typeof group !== 'undefined' && group ? group.id : '' %>">
-            <span>&#128269;</span>
-            <input type="email" name="friendEmail" placeholder="Search..." required>
-            <button type="submit" style="background:none;border:none;color:rgba(255,255,255,0.5);cursor:pointer;">&#10799;</button>
-          </form>
-          <p class="gc-or">or</p>
-          <button type="button" class="gc-share-btn" onclick="copyLink()">Share Link</button>
-          <input type="hidden" id="inviteLinkHidden" value="<%= typeof inviteLink !== 'undefined' ? inviteLink : '' %>">
-          <br>
-          <a href="/groups/<%= typeof group !== 'undefined' && group ? group.id : '1' %>" class="gc-go-btn">Skip to Group</a>
-        </div>
-        <div class="gc-right">
-          <div class="gc-upload-circle" id="uploadCircle">
-            <svg class="gc-img-icon" viewBox="0 0 24 24" fill="none"><rect x="2" y="2" width="20" height="20" rx="4" stroke="#9aa" stroke-width="1.5"/><path d="M2 16l5-5 4 4 3-3 8 8H6a4 4 0 01-4-4v0z" fill="#bcc"/><circle cx="8.5" cy="8.5" r="2" fill="#bcc"/></svg>
-            <img class="gc-preview" id="previewImg" alt="Preview">
-            <input type="file" accept="image/*" id="groupPicInput">
+
+<!-- Group Created — matches Figma "Your Country group has been created!" -->
+<div class="group-creation-page">
+  <div class="group-creation-bg">
+    <img src="https://images.unsplash.com/photo-1509316785289-025f5b846b35?w=1600&q=80" alt="Desert landscape at sunset">
+  </div>
+
+  <div class="group-creation-content" style="text-align: left;">
+    <div class="confirmed-layout">
+      <div class="confirmed-left">
+        <h1>Your &ldquo;Country&rdquo; group<br>has been created!</h1>
+
+        <div style="margin-top: 32px;">
+          <label style="font-size: 15px; font-weight: 500; color: var(--text-secondary); display: block; margin-bottom: 8px;">Search for a friend</label>
+          <div class="search-input">
+            <span class="search-icon">🔍</span>
+            <input type="text" placeholder="Search...">
           </div>
-          <a href="#" class="gc-upload-btn" onclick="document.getElementById('groupPicInput').click();return false;">Upload Profile Picture</a>
         </div>
+
+        <p style="color: var(--text-secondary); margin: 12px 0;">or</p>
+
+        <a href="#" class="btn btn-secondary" style="width: auto;">Share Link</a>
       </div>
+
+      <div class="confirmed-right">
+        <div class="upload-circle" style="width: 140px; height: 140px;">
+          <span class="upload-icon">🖼️</span>
+          <input type="file" accept="image/*">
+        </div>
+        <a href="#" class="resend-link" style="font-size: 13px;">Upload Profile Picture</a>
+      </div>
+    </div>
+
+    <div class="setup-actions" style="justify-content: flex-start; margin-top: 40px;">
+      <a href="/groups/1" class="btn btn-primary">Go to Group</a>
     </div>
   </div>
 </div>
-<div class="copied-toast" id="copiedToast">Link copied!</div>
-<script>
-  var s=localStorage.getItem('atlasphere-theme');if(s)document.documentElement.setAttribute('data-theme',s);
-  function copyLink(){var l=document.getElementById('inviteLinkHidden').value;if(!l)return;navigator.clipboard.writeText(l).then(function(){var t=document.getElementById('copiedToast');t.style.display='block';setTimeout(function(){t.style.display='none';},2000);});}
-  document.getElementById('groupPicInput').addEventListener('change',function(e){var f=e.target.files[0];if(!f)return;var r=new FileReader();r.onload=function(ev){var i=document.getElementById('previewImg');i.src=ev.target.result;i.style.display='block';};r.readAsDataURL(f);});
-</script>
+
 </body>
 </html>

@@ -1,52 +1,22 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Welcome to Atlasphere</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <title>Itinerary — Atlasphere</title>
   <link rel="stylesheet" href="/css/styles.css">
 </head>
 <body>
 
-<nav class="lp-nav">
-  <a href="/" class="lp-nav__brand"><span>Atlasphere</span></a>
-  <div class="lp-nav__right">
-    <label class="theme-switch" aria-label="Toggle theme">
-      <input type="checkbox" id="themeToggle">
-      <div class="theme-switch__track"></div>
-      <div class="theme-switch__knob"></div>
-    </label>
-    <% if (typeof user !== 'undefined' && user) { %>
-      <a href="/auth/logout" class="lp-login">Sign out</a>
-    <% } else { %>
-      <a href="/auth/login" class="lp-login">Log in</a>
-    <% } %>
-  </div>
-</nav>
+<%- include('../partials/navbar', { user: typeof user !== 'undefined' ? user : null }) %>
 
-<div style="padding:0 32px 32px;flex:1;display:flex;min-height:calc(100vh - 70px);">
-  <div style="flex:1;border-radius:24px;overflow:hidden;border:2px solid rgba(100,140,200,0.3);background-image:url('/images/hero-hiker.jpg');background-size:cover;background-position:center;position:relative;display:flex;flex-direction:column;justify-content:space-between;padding:50px 60px;">
-    <div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,0.1) 0%,rgba(0,0,0,0.35) 60%,rgba(0,0,0,0.55) 100%);"></div>
-    <h1 style="position:relative;z-index:1;font-size:clamp(3rem,8vw,5.5rem);font-weight:800;color:#fff;line-height:1.0;letter-spacing:-0.02em;max-width:700px;font-family:'Lexend',sans-serif;">Welcome to<br>Atlasphere</h1>
-    <div style="position:relative;z-index:1;display:flex;gap:20px;justify-content:center;">
-      <% if (typeof user !== 'undefined' && user) { %>
-        <a href="/groups" class="lp-btn lp-btn--outline">My Trips</a>
-        <a href="/groups/create/country" class="lp-btn lp-btn--orange">Create a Trip</a>
-      <% } else { %>
-        <a href="/auth/register" class="lp-btn lp-btn--outline">Register</a>
-        <a href="/auth/login" class="lp-btn lp-btn--orange">login</a>
-      <% } %>
-    </div>
-  </div>
+<div class="profile-page">
+  <h1>Itinerary</h1>
+  <p style="color: var(--text-secondary);">Select a group to view its itinerary.</p>
+  <a href="/groups" class="btn btn-primary" style="margin-top: 24px;">View Groups</a>
 </div>
 
-<script>
-  var t=document.getElementById('themeToggle'),h=document.documentElement;
-  var s=localStorage.getItem('atlasphere-theme');
-  if(s==='light'){h.setAttribute('data-theme','light');t.checked=true;}
-  t.addEventListener('change',function(){var n=t.checked?'light':'dark';h.setAttribute('data-theme',n);localStorage.setItem('atlasphere-theme',n);});
-</script>
+<%- include('../partials/footer') %>
+
 </body>
 </html>
