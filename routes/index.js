@@ -1,3 +1,9 @@
 router.get('/settings', (req, res) => {
-  res.render('settings', { user: req.session.user || null });
+  const groups = req.app.locals.groups || [];
+  res.render('settings', {
+    user: req.session.user || null,
+    groups: groups,
+    countries: [],
+    cities: []
+  });
 });

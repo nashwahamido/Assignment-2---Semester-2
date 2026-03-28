@@ -1,81 +1,30 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title><%= typeof group !== 'undefined' && group ? group.name + ' — Atlasphere' : 'Group — Atlasphere' %></title>
+  <title><%= typeof group !== 'undefined' && group ? group.name + ' - Atlasphere' : 'Group - Atlasphere' %></title>
+  <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/css/styles.css">
   <link rel="stylesheet" href="/css/groupTabs.css">
+  <style>
+    .gp-app { display: flex; flex-direction: column; min-height: calc(100vh - 60px); }
+    .gp-content { flex: 1; display: flex; overflow: hidden; }
+  </style>
 </head>
 <body>
 
 <%- include('../partials/navbar', { user: typeof user !== 'undefined' ? user : null }) %>
 
-<main>
-  <div class="sectionContainer">
+<div id="group-tabs-root"
+     data-group-id="<%= typeof group !== 'undefined' && group ? group.id : '' %>"
+     data-user-id="<%= typeof user !== 'undefined' && user ? user.id : '' %>"
+     data-group-name="<%= typeof group !== 'undefined' && group ? group.name : '' %>"
+     data-trip-days="<%= typeof tripDays !== 'undefined' ? tripDays : 7 %>">
+  <p style="text-align:center;padding:40px;opacity:0.5;">Loading...</p>
+</div>
 
-    <!-- Left panel: groups list -->
-    <section class="creategroupContainer">
-      <h4>Groups</h4>
-      <p><a href="/groups/create/country">Create a group</a></p>
-      <p style="color: var(--text-secondary); font-size: 14px; margin-top: 12px;">Search for a group</p>
-      <input type="search" id="groupsearch" name="groupsearch" placeholder="Search groups...">
-      <p style="color: var(--text-secondary); font-size: 14px; margin-bottom: 8px;">Your groups:</p>
-      <div class="joinedGroupsContainer">
-        <ul>
-          <% if (typeof groups !== 'undefined' && groups && groups.length > 0) { %>
-            <% groups.forEach(function(g) { %>
-              <li>
-                <a href="/groups/<%= g.id %>"
-                   class="<%= (typeof group !== 'undefined' && group && group.id === g.id) ? 'active' : '' %>">
-                  <%= g.name %>
-                </a>
-              </li>
-            <% }) %>
-          <% } else { %>
-            <li style="padding: 10px 12px; color: var(--gray-400); font-size: 14px; font-style: italic;">
-              You haven't joined any groups yet.
-            </li>
-          <% } %>
-        </ul>
-      </div>
-    </section>
-
-    <!-- Right panel: React mount points -->
-    <section class="toggleTabsContainer">
-
-      <!--
-        REACT MOUNT POINTS
-        The pre-built groupTabs.js looks for all 3 divs.
-        After you run `npx vite build`, only #group-tabs-root is needed.
-      -->
-      <div id="group-tabs-root"
-           data-group-id="<%= typeof group !== 'undefined' && group ? group.id : '' %>"
-           data-user-id="<%= typeof user !== 'undefined' && user ? user.id : '' %>"
-           data-group-name="<%= typeof group !== 'undefined' && group ? group.name : '' %>">
-        <p class="react-loading">Loading tabs...</p>
-      </div>
-
-      <!-- These are used by the pre-built bundle; safe to remove after npx vite build -->
-      <div id="chat-root"
-           data-group-id="<%= typeof group !== 'undefined' && group ? group.id : '' %>"
-           data-user-id="<%= typeof user !== 'undefined' && user ? user.id : '' %>"
-           data-user-name="<%= typeof user !== 'undefined' && user ? user.name : 'Guest' %>">
-      </div>
-      <div id="voting-root"
-           data-group-id="<%= typeof group !== 'undefined' && group ? group.id : '' %>"
-           data-user-id="<%= typeof user !== 'undefined' && user ? user.id : '' %>"
-           data-user-name="<%= typeof user !== 'undefined' && user ? user.name : 'Guest' %>">
-      </div>
-
-    </section>
-  </div>
-</main>
-
-<%- include('../partials/footer') %>
-
-<!-- React bundles -->
 <script type="module" src="/js/groupTabs.js"></script>
-
+<script>var s=localStorage.getItem('atlasphere-theme');if(s)document.documentElement.setAttribute('data-theme',s);</script>
 </body>
 </html>

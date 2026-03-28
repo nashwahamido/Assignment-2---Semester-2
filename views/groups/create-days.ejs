@@ -1,46 +1,42 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Trip Length — Atlasphere</title>
+  <title>Trip Length - Atlasphere</title>
+  <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/css/styles.css">
 </head>
 <body>
-
 <%- include('../partials/navbar', { user: typeof user !== 'undefined' ? user : null }) %>
 
-<!-- Group Creation: Days — matches Figma "How long do you plan to spend?" -->
-<div class="group-creation-page">
-  <div class="group-creation-bg">
-    <img src="https://images.unsplash.com/photo-1509316785289-025f5b846b35?w=1600&q=80" alt="Desert landscape at sunset">
-  </div>
+<div class="framed-page">
+  <div class="framed-box">
+    <div class="framed-box__bg"><img src="/images/setup-desert.jpg" alt="Desert landscape"></div>
+    <div class="framed-box__content" style="display:flex;align-items:center;justify-content:center;">
+      <div class="group-creation-content">
+        <h1>How long do you plan to spend?</h1>
+        <p>Drag the toggle to select the number of days</p>
 
-  <div class="group-creation-content">
-    <h1>How long do you plan to spend?</h1>
-    <p>Drag the toggle to select the number of days</p>
-
-    <form action="/groups/create/confirm" method="get">
-      <div class="slider-container">
-        <input type="range" min="1" max="30" value="10" class="slider-track" id="slideRange" name="days">
-        <p class="slider-value"><span id="daysValue">10</span> Days</p>
+        <form action="/groups/create/confirm" method="get">
+          <div class="slider-container">
+            <input type="range" min="1" max="30" value="10" class="slider-track" id="slideRange" name="days">
+            <p class="slider-value"><span id="daysValue">10</span> Days</p>
+          </div>
+          <div class="setup-actions" style="margin-top: 40px;">
+            <button type="submit" class="btn btn-primary">Next</button>
+          </div>
+        </form>
       </div>
-
-      <div class="setup-actions" style="margin-top: 40px;">
-        <button type="submit" class="btn btn-primary">Next</button>
-      </div>
-    </form>
+    </div>
   </div>
 </div>
 
 <script>
-  const slider = document.getElementById('slideRange');
-  const output = document.getElementById('daysValue');
-  output.textContent = slider.value;
-  slider.addEventListener('input', function() {
-    output.textContent = this.value;
-  });
+  var slider=document.getElementById('slideRange');
+  var output=document.getElementById('daysValue');
+  output.textContent=slider.value;
+  slider.addEventListener('input',function(){output.textContent=this.value;});
 </script>
-
 </body>
 </html>

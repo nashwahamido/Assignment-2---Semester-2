@@ -1,54 +1,216 @@
-const express = require('express');
-const router = express.Router();
+var express = require("express");
+var router = express.Router();
+var crypto = require("crypto");
 
-// List all groups
-router.get('/', (req, res) => {
-  // TODO: fetch from DB
-  const groups = [
-    { id: 1, name: 'Prague' },
-    { id: 2, name: 'Rome' },
-    { id: 3, name: 'Dublin' }
-  ];
-  res.render('groups/groupPage', {
-    user: req.session.user || null,
-    group: null,
-    groups: groups
+// ── In-memory groups storage ────────────────────────────────────────────
+function getGroups(req) {
+  if (!req.app.locals.groups) {
+    req.app.locals.groups = [
+      { id: 1, name: "Prague", destination: "Czech Republic", inviteCode: "prague-abc123", days: 7, members: [], createdBy: null },
+      { id: 2, name: "Rome", destination: "Italy", inviteCode: "rome-def456", days: 7, members: [], createdBy: null },
+      { id: 3, name: "Dublin", destination: "Ireland", inviteCode: "dublin-ghi789", days: 7, members: [], createdBy: null }
+    ];
+  }
+  return req.app.locals.groups;
+}
+
+function generateInviteCode() {
+  return crypto.randomBytes(6).toString("hex");
+}
+
+// ── Group creation flow (MUST be before /:id) ───────────────────────────
+
+router.get("/create/country", function (req, res) {
+  res.render("groups/create-country", { title: "Choose Destination", user: req.session.user || null });
+});
+
+router.get("/create/city", function (req, res) {
+  res.render("groups/create-city", { title: "Choose Cities", user: req.session.user || null });
+});
+
+router.get("/create/days", function (req, res) {
+  res.render("groups/create-days", { title: "Trip Length", user: req.session.user || null });
+});
+
+// Create the group and show confirm page with invite options
+router.get("/create/confirm", function (req, res) {
+  var groups = getGroups(req);
+  var user = req.session.user;
+
+  // Create a new group
+  var groupName = req.query.country || "My Trip";
+  var days = parseInt(req.query.days) || 7;
+  var inviteCode = generateInviteCode();
+  var newGroup = {
+    id: Date.now(),
+    name: groupName,
+    destination: groupName,
+    inviteCode: inviteCode,
+    days: days,
+    members: user ? [{ id: user.id, username: user.username, email: user.email }] : [],
+    createdBy: user ? user.id : null
+  };
+  groups.push(newGroup);
+
+  // Store in session so the confirm page knows which group
+  req.session.currentGroupId = newGroup.id;
+
+  var inviteLink = req.protocol + "://" + req.get("host") + "/groups/join/" + inviteCode;
+
+  res.render("groups/create-confirm", {
+    title: "Group Created",
+    user: user || null,
+    group: newGroup,
+    inviteLink: inviteLink,
+    inviteSuccess: null,
+    inviteError: null
   });
 });
 
-// Individual group page
-router.get('/:id', (req, res) => {
-  const groupId = req.params.id;
-  // TODO: fetch from DB
-  const groups = [
-    { id: 1, name: 'Prague' },
-    { id: 2, name: 'Rome' },
-    { id: 3, name: 'Dublin' }
-  ];
-  const group = groups.find(g => g.id == groupId) || { id: groupId, name: 'Group ' + groupId, destination: '' };
+// ── Invite by email ─────────────────────────────────────────────────────
+router.post("/invite", async function (req, res) {
+  var groups = getGroups(req);
+  var groupId = req.body.groupId;
+  var friendEmail = req.body.friendEmail;
+  var user = req.session.user;
 
-  res.render('groups/groupPage', {
+  var group = groups.find(function (g) { return g.id == groupId; });
+  if (!group) {
+    return res.status(404).send("Group not found");
+  }
+
+  var inviteLink = req.protocol + "://" + req.get("host") + "/groups/join/" + group.inviteCode;
+
+  var nodemailer = require("nodemailer");
+  var transporter = req.app.locals.transporter;
+
+  if (!transporter) {
+    console.log("No email transporter. Invite link: " + inviteLink);
+    return res.render("groups/create-confirm", {
+      title: "Group Created", user: user || null, group: group,
+      inviteLink: inviteLink,
+      inviteSuccess: "Invite link generated (email not configured): " + inviteLink,
+      inviteError: null
+    });
+  }
+
+  try {
+    var senderName = user ? user.username : "Someone";
+    await transporter.sendMail({
+      from: "Atlasphere <noreply@atlasphere.com>",
+      to: friendEmail,
+      subject: senderName + " invited you to join " + group.name + " on Atlasphere!",
+      html: "<div style=\"font-family:Arial;max-width:480px;margin:0 auto;padding:32px\">" +
+            "<h1 style=\"color:#0B3856\">You're invited!</h1>" +
+            "<p style=\"font-size:16px;color:#555\">" + senderName + " wants you to join their trip group <strong>" + group.name + "</strong> on Atlasphere.</p>" +
+            "<div style=\"text-align:center;margin:32px 0\">" +
+            "<a href=\"" + inviteLink + "\" style=\"display:inline-block;padding:14px 40px;background:#E8933A;color:#fff;text-decoration:none;border-radius:30px;font-weight:700;font-size:16px\">Join Group</a>" +
+            "</div>" +
+            "<p style=\"color:#888;font-size:14px\">Or copy this link: " + inviteLink + "</p>" +
+            "</div>"
+    });
+
+    console.log("Invite email sent to: " + friendEmail);
+
+    res.render("groups/create-confirm", {
+      title: "Group Created", user: user || null, group: group,
+      inviteLink: inviteLink,
+      inviteSuccess: "Invite sent to " + friendEmail + "!",
+      inviteError: null
+    });
+  } catch (err) {
+    console.error("Invite email error:", err.message);
+    res.render("groups/create-confirm", {
+      title: "Group Created", user: user || null, group: group,
+      inviteLink: inviteLink,
+      inviteSuccess: null,
+      inviteError: "Failed to send email. Share this link instead: " + inviteLink
+    });
+  }
+});
+
+// ── Join via invite link ────────────────────────────────────────────────
+router.get("/join/:code", function (req, res) {
+  var groups = getGroups(req);
+  var group = groups.find(function (g) { return g.inviteCode === req.params.code; });
+
+  if (!group) {
+    return res.status(404).render("error", {
+      status: 404, message: "Invalid or expired invite link", user: req.session.user || null
+    });
+  }
+
+  var user = req.session.user;
+
+  if (!user) {
+    req.session.pendingInvite = req.params.code;
+    req.session.save(function () {
+      res.redirect("/auth/register");
+    });
+    return;
+  }
+
+  var alreadyMember = group.members.find(function (m) { return m.id === user.id; });
+  if (!alreadyMember) {
+    group.members.push({ id: user.id, username: user.username, email: user.email });
+    console.log(user.username + " joined group: " + group.name);
+  }
+
+  res.redirect("/groups/" + group.id);
+});
+
+// ── List all groups ─────────────────────────────────────────────────────
+router.get("/", function (req, res) {
+  var groups = getGroups(req);
+  var user = req.session.user;
+
+  var userGroups = user
+    ? groups.filter(function (g) {
+        return g.members.some(function (m) { return m.id === user.id; }) || g.createdBy === user.id;
+      })
+    : groups;
+
+  res.render("groups/groupPage", {
+    user: user || null,
+    group: null,
+    groups: userGroups.length > 0 ? userGroups : groups
+  });
+});
+
+// ── Individual group page (MUST be last) ────────────────────────────────
+router.get("/:id", function (req, res) {
+  var groups = getGroups(req);
+  var groupId = req.params.id;
+  var group = groups.find(function (g) { return g.id == groupId; });
+
+  if (!group) {
+    group = { id: groupId, name: "Group " + groupId, destination: "", inviteCode: "", days: 7, members: [] };
+  }
+
+  res.render("groups/groupPage", {
     user: req.session.user || null,
     group: group,
-    groups: groups
+    groups: groups,
+    tripDays: group.days || 7
   });
 });
 
-// Group creation flow
-router.get('/create/country', (req, res) => {
-  res.render('groups/create-country', { title: 'Choose Destination', user: req.session.user || null });
+
+// ── Delete group ────────────────────────────────────────────────────────
+router.post("/delete/:id", function (req, res) {
+  var groups = getGroups(req);
+  req.app.locals.groups = groups.filter(function (g) { return g.id != req.params.id; });
+  res.redirect("/settings");
 });
 
-router.get('/create/city', (req, res) => {
-  res.render('groups/create-city', { title: 'Choose Cities', user: req.session.user || null });
-});
-
-router.get('/create/days', (req, res) => {
-  res.render('groups/create-days', { title: 'Trip Length', user: req.session.user || null });
-});
-
-router.get('/create/confirm', (req, res) => {
-  res.render('groups/create-confirm', { title: 'Group Created', user: req.session.user || null });
+// ── Rename group ────────────────────────────────────────────────────────
+router.post("/rename/:id", function (req, res) {
+  var groups = getGroups(req);
+  var group = groups.find(function (g) { return g.id == req.params.id; });
+  if (group && req.body.newName) {
+    group.name = req.body.newName;
+  }
+  res.redirect("/settings");
 });
 
 module.exports = router;
