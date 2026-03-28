@@ -1,42 +1,99 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Cities Visited - Atlasphere</title>
-  <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <title>Cities Visited — Atlasphere</title>
   <link rel="stylesheet" href="/css/styles.css">
 </head>
 <body>
+
 <%- include('../../partials/navbar', { user: typeof user !== 'undefined' ? user : null }) %>
-<div class="framed-page">
-  <div class="framed-box">
-    <div class="framed-box__bg"><img src="/images/profile-created-coast.jpg" alt="Coast"></div>
-    <div class="framed-box__content">
-      <div class="sel-content">
-        <div class="sel-header"><h1>What cities have you visited?</h1><a href="/profile/confirmed" class="skip-btn">Skip</a></div>
-        <div class="sel-search"><span>&#128269;</span><input type="text" placeholder="Search" id="citySearch"></div>
-        <form action="/profile/confirmed" method="get">
-          <div class="flag-grid">
-            <label class="flag-card" onclick="this.classList.toggle('selected')"><input type="checkbox" name="cities[]" value="dub"><span class="flag-card__img">&#127470;&#127466;</span><span class="flag-card__name">Dublin</span></label>
-            <label class="flag-card" onclick="this.classList.toggle('selected')"><input type="checkbox" name="cities[]" value="vie"><span class="flag-card__img">&#127462;&#127481;</span><span class="flag-card__name">Vienna</span></label>
-            <label class="flag-card" onclick="this.classList.toggle('selected')"><input type="checkbox" name="cities[]" value="rom"><span class="flag-card__img">&#127470;&#127481;</span><span class="flag-card__name">Rome</span></label>
-            <label class="flag-card" onclick="this.classList.toggle('selected')"><input type="checkbox" name="cities[]" value="bru"><span class="flag-card__img">&#127463;&#127466;</span><span class="flag-card__name">Brussels</span></label>
-            <label class="flag-card" onclick="this.classList.toggle('selected')"><input type="checkbox" name="cities[]" value="par"><span class="flag-card__img">&#127467;&#127479;</span><span class="flag-card__name">Paris</span></label>
-            <label class="flag-card" onclick="this.classList.toggle('selected')"><input type="checkbox" name="cities[]" value="zur"><span class="flag-card__img">&#127464;&#127469;</span><span class="flag-card__name">Zurich</span></label>
-            <label class="flag-card" onclick="this.classList.toggle('selected')"><input type="checkbox" name="cities[]" value="lon"><span class="flag-card__img">&#127988;&#917607;&#917602;&#917605;&#917614;&#917607;&#917631;</span><span class="flag-card__name">London</span></label>
-            <label class="flag-card" onclick="this.classList.toggle('selected')"><input type="checkbox" name="cities[]" value="gla"><span class="flag-card__img">&#127988;&#917607;&#917602;&#917619;&#917603;&#917620;&#917631;</span><span class="flag-card__name">Glasgow</span></label>
-            <label class="flag-card" onclick="this.classList.toggle('selected')"><input type="checkbox" name="cities[]" value="ams"><span class="flag-card__img">&#127475;&#127473;</span><span class="flag-card__name">Amsterdam</span></label>
-            <label class="flag-card" onclick="this.classList.toggle('selected')"><input type="checkbox" name="cities[]" value="ber"><span class="flag-card__img">&#127465;&#127466;</span><span class="flag-card__name">Berlin</span></label>
-            <label class="flag-card" onclick="this.classList.toggle('selected')"><input type="checkbox" name="cities[]" value="hel"><span class="flag-card__img">&#127467;&#127470;</span><span class="flag-card__name">Helsinki</span></label>
-            <label class="flag-card" onclick="this.classList.toggle('selected')"><input type="checkbox" name="cities[]" value="sto"><span class="flag-card__img">&#127480;&#127466;</span><span class="flag-card__name">Stockholm</span></label>
-          </div>
-          <div class="sel-actions"><button type="submit" class="btn-next">Next</button></div>
-        </form>
+
+<!-- What cities have you visited? — matches Figma -->
+<div class="setup-page">
+  <div class="setup-bg">
+    <img src="https://images.unsplash.com/photo-1534351590666-13e3e96b5017?w=1600&q=80" alt="European city view">
+  </div>
+
+  <div class="setup-content">
+    <h1>What cities have you visited?</h1>
+
+    <div class="search-input">
+      <span class="search-icon">🔍</span>
+      <input type="text" id="citySearch" placeholder="Search...">
+    </div>
+
+    <div class="location-grid" id="cityGrid">
+      <div class="location-card" data-city="dublin">
+        <img class="flag" src="https://flagcdn.com/w160/ie.png" alt="Ireland">
+        <span class="location-name">Dublin</span>
       </div>
+      <div class="location-card" data-city="vienna">
+        <img class="flag" src="https://flagcdn.com/w160/at.png" alt="Austria">
+        <span class="location-name">Vienna</span>
+      </div>
+      <div class="location-card" data-city="rome">
+        <img class="flag" src="https://flagcdn.com/w160/it.png" alt="Italy">
+        <span class="location-name">Rome</span>
+      </div>
+      <div class="location-card" data-city="brussels">
+        <img class="flag" src="https://flagcdn.com/w160/be.png" alt="Belgium">
+        <span class="location-name">Brussels</span>
+      </div>
+      <div class="location-card" data-city="paris">
+        <img class="flag" src="https://flagcdn.com/w160/fr.png" alt="France">
+        <span class="location-name">Paris</span>
+      </div>
+      <div class="location-card" data-city="zurich">
+        <img class="flag" src="https://flagcdn.com/w160/ch.png" alt="Switzerland">
+        <span class="location-name">Zurich</span>
+      </div>
+      <div class="location-card" data-city="london">
+        <img class="flag" src="https://flagcdn.com/w160/gb-eng.png" alt="England">
+        <span class="location-name">London</span>
+      </div>
+      <div class="location-card" data-city="glasgow">
+        <img class="flag" src="https://flagcdn.com/w160/gb-sct.png" alt="Scotland">
+        <span class="location-name">Glasgow</span>
+      </div>
+      <div class="location-card" data-city="amsterdam">
+        <img class="flag" src="https://flagcdn.com/w160/nl.png" alt="Netherlands">
+        <span class="location-name">Amsterdam</span>
+      </div>
+      <div class="location-card" data-city="berlin">
+        <img class="flag" src="https://flagcdn.com/w160/de.png" alt="Germany">
+        <span class="location-name">Berlin</span>
+      </div>
+      <div class="location-card" data-city="helsinki">
+        <img class="flag" src="https://flagcdn.com/w160/fi.png" alt="Finland">
+        <span class="location-name">Helsinki</span>
+      </div>
+      <div class="location-card" data-city="stockholm">
+        <img class="flag" src="https://flagcdn.com/w160/se.png" alt="Sweden">
+        <span class="location-name">Stockholm</span>
+      </div>
+    </div>
+
+    <div class="setup-actions">
+      <a href="/profile/confirmed" class="btn btn-primary">Next</a>
+      <a href="/profile/confirmed" class="skip-link">Skip</a>
     </div>
   </div>
 </div>
-<script>var s=localStorage.getItem('atlasphere-theme');if(s)document.documentElement.setAttribute('data-theme',s);document.getElementById('citySearch').addEventListener('input',function(e){var v=e.target.value.toLowerCase();document.querySelectorAll('.flag-card').forEach(function(c){c.style.display=c.textContent.toLowerCase().includes(v)?'':'none';});});</script>
+
+<script>
+  document.querySelectorAll('.location-card').forEach(card => {
+    card.addEventListener('click', () => card.classList.toggle('selected'));
+  });
+  document.getElementById('citySearch').addEventListener('input', (e) => {
+    const q = e.target.value.toLowerCase();
+    document.querySelectorAll('.location-card').forEach(card => {
+      const name = card.querySelector('.location-name').textContent.toLowerCase();
+      card.style.display = name.includes(q) ? '' : 'none';
+    });
+  });
+</script>
+
 </body>
 </html>
