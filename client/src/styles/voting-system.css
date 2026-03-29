@@ -1,9 +1,9 @@
 .voting-page {
   min-height: 100vh;
-  background: #e4f1ff;
   padding: 32px 24px 44px;
   font-family: "Lexend", sans-serif;
   overflow: hidden;
+  background: transparent;
 }
 
 .voting-section {
@@ -26,38 +26,6 @@
 .voting-header p {
   font-size: 1rem;
   color: #111;
-}
-
-.voting-toggle {
-  width: fit-content;
-  margin: 0 auto 40px;
-  background: #2364aa;
-  border-radius: 999px;
-  padding: 6px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.toggle-btn {
-  width: 44px;
-  height: 44px;
-  border: none;
-  border-radius: 50%;
-  background: transparent;
-  display: grid;
-  place-items: center;
-  cursor: pointer;
-}
-
-.toggle-btn.active {
-  background: #eef4fb;
-}
-
-.toggle-icon {
-  width: 20px;
-  height: 20px;
-  display: block;
 }
 
 .carousel-3d {
