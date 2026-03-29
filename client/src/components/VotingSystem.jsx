@@ -180,16 +180,6 @@ export default function VotingSystem() {
     }));
   };
 
-  const handleSubmit = () => {
-    const payload = activities.map((activity) => ({
-      activityId: activity.id,
-      activityName: activity.name,
-      vote: votes[activity.id] || "",
-    }));
-
-    console.log("Submitted votes:", payload);
-  };
-
   return (
     <main className="voting-page">
       <section className="voting-section">
@@ -208,16 +198,6 @@ export default function VotingSystem() {
             />
           ))}
         </Carousel>
-
-        <div className="submit-container">
-          <button
-            type="button"
-            className="submit-votes-button"
-            onClick={handleSubmit}
-          >
-            Submit votes
-          </button>
-        </div>
       </section>
     </main>
   );
