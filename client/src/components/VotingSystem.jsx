@@ -5,8 +5,6 @@ import trevi from "../../../assets/images/trevi.jpg";
 import basilica from "../../../assets/images/basilica.jpg";
 import pantheon from "../../../assets/images/pantheon.jpg";
 import villa from "../../../assets/images/villa.jpg";
-import messageIcon from "../../../assets/images/message-icon.svg";
-import calendarIcon from "../../../assets/images/calendar-icon.svg";
 import sendIcon from "../../../assets/images/send-icon-bold.svg";
 import thumbsUpIcon from "../../../assets/images/thumbs-up-icon.svg";
 import discoverIcon from "../../../assets/images/discover-icon.svg";
@@ -61,9 +59,7 @@ const activities = [
 ];
 
 const icons = {
-  message: messageIcon,
   discover: discoverIcon,
-  calendar: calendarIcon,
   send: sendIcon,
   yes: thumbsUpIcon,
   maybe: maybeIcon,
@@ -202,20 +198,6 @@ export default function VotingSystem() {
           <p>Vote for things to do in Rome</p>
         </header>
 
-        <div className="voting-toggle">
-          <button type="button" className="toggle-btn" aria-label="Messages">
-            <img src={icons.message} alt="" className="toggle-icon" />
-          </button>
-
-          <button type="button" className="toggle-btn active" aria-label="Discover">
-            <img src={icons.discover} alt="" className="toggle-icon" />
-          </button>
-
-          <button type="button" className="toggle-btn" aria-label="Calendar">
-            <img src={icons.calendar} alt="" className="toggle-icon" />
-          </button>
-        </div>
-
         <Carousel active={active} setActive={setActive}>
           {activities.map((activity) => (
             <ActivityCard
@@ -239,4 +221,4 @@ export default function VotingSystem() {
       </section>
     </main>
   );
-}
+};
