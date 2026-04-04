@@ -6,6 +6,7 @@ const mysql = require("mysql2");
 const bcrypt = require("bcrypt");
 const nodemailer = require("nodemailer");
 const fileUpload = require("express-fileupload");
+const fs = require("fs");
 
 const app = express();
 
@@ -145,7 +146,7 @@ app.get("/auth/login", (req, res) => {
 });
 
 app.post("/auth/login", (req, res) => {
-  const username = req.body.loginuser;
+  const username = req.body.loginuser || req.body.loginemail;
   const password = req.body.loginpsw;
 
   if (!username || !password) {
@@ -157,8 +158,8 @@ app.post("/auth/login", (req, res) => {
   }
 
   connection.query(
-    "SELECT * FROM tbl_users WHERE username = ? LIMIT 1",
-    [username],
+    "SELECT * FROM tbl_users WHERE (username = ? OR email = ?) LIMIT 1",
+    [username, username],
     async (dbErr, results) => {
       if (dbErr) {
         console.error(dbErr);
@@ -430,6 +431,50 @@ app.get("/setup", requireAuth, (req, res) => {
   });
 });
 
+app.post("/setup/upload", requireAuth, (req, res) => {
+  if (!req.files || !req.files.profilePicture) {
+    return res.redirect("/setup/countries");
+  }
+
+  var file = req.files.profilePicture;
+  var uploadDir = path.join(__dirname, "assets/uploads");
+
+  if (!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir, { recursive: true });
+  }
+
+  var timestamp = new Date().toISOString().replace(/[-:T]/g, "").slice(0, 15);
+  var safeName = file.name.replace(/[^a-zA-Z0-9.\-_]/g, "_");
+  var fileName = timestamp + "_" + safeName;
+  var filePath = path.join(uploadDir, fileName);
+
+  file.mv(filePath, function (err) {
+    if (err) {
+      console.error("File upload error:", err);
+      return res.redirect("/setup/countries");
+    }
+
+    var dbPath = "/uploads/" + fileName;
+
+    connection.query(
+      "UPDATE tbl_users SET profilePictureUrl = ?, profilePictureAlt = ? WHERE IDuser = ?",
+      [dbPath, "Profile picture", req.session.user.id],
+      function (dbErr) {
+        if (dbErr) {
+          console.error("DB update error:", dbErr);
+        } else {
+          req.session.user.profilePictureUrl = dbPath;
+          console.log("Profile picture saved:", dbPath);
+        }
+
+        req.session.save(function () {
+          res.redirect("/setup/countries");
+        });
+      }
+    );
+  });
+});
+
 app.get("/setup/countries", requireAuth, (req, res) => {
   res.render("groups/profile/countries", {
     title: "Countries Visited",
@@ -446,16 +491,69 @@ app.get("/setup/cities", requireAuth, (req, res) => {
 
 // ── PROFILE ──────────────────────────────────────────────────────────────
 app.get("/profile", requireAuth, (req, res) => {
-  const user = req.session.user || {
-    name: "TestUser",
-    username: "TestUser",
-    profile_image: null,
-    countries_visited: 5,
-    cities_visited: 12,
-    groups_created: 3,
-  };
+  var userId = req.session.user.id;
 
-  res.render("profile", { user });
+  connection.query(
+    "SELECT profilePictureUrl FROM tbl_users WHERE IDuser = ?",
+    [userId],
+    function (err, results) {
+      var image = null;
+      if (!err && results && results.length > 0) {
+        image = results[0].profilePictureUrl || null;
+      }
+
+      var user = req.session.user || {
+        username: "TestUser",
+        groups_created: 0,
+      };
+
+      res.render("profile", { user: user, image: image });
+    }
+  );
+});
+
+app.post("/profile/upload", requireAuth, function (req, res) {
+  if (!req.files || !req.files.profilePicture) {
+    return res.redirect("/profile");
+  }
+
+  var file = req.files.profilePicture;
+  var uploadDir = path.join(__dirname, "assets/uploads");
+
+  if (!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir, { recursive: true });
+  }
+
+  var timestamp = new Date().toISOString().replace(/[-:T]/g, "").slice(0, 15);
+  var safeName = file.name.replace(/[^a-zA-Z0-9.\-_]/g, "_");
+  var fileName = timestamp + "_" + safeName;
+  var filePath = path.join(uploadDir, fileName);
+
+  file.mv(filePath, function (err) {
+    if (err) {
+      console.error("File upload error:", err);
+      return res.redirect("/profile");
+    }
+
+    var dbPath = "/uploads/" + fileName;
+
+    connection.query(
+      "UPDATE tbl_users SET profilePictureUrl = ?, profilePictureAlt = ? WHERE IDuser = ?",
+      [dbPath, "Profile picture", req.session.user.id],
+      function (dbErr) {
+        if (dbErr) {
+          console.error("DB update error:", dbErr);
+        } else {
+          req.session.user.profilePictureUrl = dbPath;
+          console.log("Profile picture updated:", dbPath);
+        }
+
+        req.session.save(function () {
+          res.redirect("/profile");
+        });
+      }
+    );
+  });
 });
 
 app.get("/profile/confirmed", requireAuth, (req, res) => {
