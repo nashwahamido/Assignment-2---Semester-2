@@ -107,11 +107,11 @@ var ChatBox = function(props) {
         var isSelf = String(m.userId) === String(userId);
         return React.createElement('div', { key: m.id, className: 'cb__row' + (isSelf ? ' cb__row--self' : '') },
           !isSelf && React.createElement('div', { className: 'cb__avatar', style: { backgroundColor: '#E8933A' } }),
-          React.createElement('div', { className: 'cb__bubble-group' },
-            !isSelf && React.createElement('span', { className: 'cb__sender' }, m.userName || m.user),
+          React.createElement('div', { className: 'cb__bubble-group' + (isSelf ? ' cb__bubble-group--self' : '') },
+            React.createElement('span', { className: 'cb__sender' + (isSelf ? ' cb__sender--self' : '') }, isSelf ? userName : (m.userName || m.user)),
             React.createElement('div', { className: 'cb__bubble' + (isSelf ? ' cb__bubble--self' : '') }, m.text)
           ),
-          isSelf && React.createElement('div', { className: 'cb__avatar cb__avatar--self' })
+          isSelf && React.createElement('div', { className: 'cb__avatar cb__avatar--self', style: { backgroundColor: '#3B5F8A' } })
         );
       }),
       messages.length === 0 && React.createElement('div', { className: 'cb__empty' }, 'No messages yet. Say hello!'),
