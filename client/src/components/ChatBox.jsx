@@ -1,92 +1,137 @@
-/**
- * ChatBox.jsx
- * ─────────────────────────────────────────────────────────────────────────────
- * Group chat component. Mounted inside the Chat tab via groupTabs.jsx.
- *
- * Props:
- *   groupId   {string|number} — the group/trip id
- *   userId    {string|number} — current user id
- *   userName  {string}        — current user display name
- *
- * TODO (Week 2): Connect to Socket.io for real-time messaging
- */
-
 import React, { useState, useRef, useEffect } from 'react';
 import '../styles/chatbox.css';
 
-const ChatBox = ({ groupId = '1', userId = '1', userName = 'You' }) => {
-  const [messages, setMessages] = useState([
-    { id: 1, user: 'Alice', text: 'Hey everyone! Excited about the trip! 🎉', time: '10:30', self: false },
-    { id: 2, user: 'Bob', text: 'Me too! Did we decide on the Colosseum visit?', time: '10:32', self: false },
-    { id: 3, user: userName, text: 'Yes! I booked tickets for Thursday at 10am', time: '10:35', self: true },
-    { id: 4, user: 'Alice', text: 'Perfect! Should we do lunch after?', time: '10:36', self: false },
-  ]);
-  const [input, setInput] = useState('');
-  const bottomRef = useRef(null);
+var ChatBox = function(props) {
+  var groupId = props.groupId || '1';
+  var userId = props.userId || '1';
+  var userName = props.userName || 'You';
+  var groupName = props.groupName || 'Rome';
+  var groupColor = props.groupColor || '#3B5F8A';
+  var compact = props.compact || false;
 
-  useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+  var msgState = useState([]);
+  var messages = msgState[0];
+  var setMessages = msgState[1];
+  var inputState = useState('');
+  var input = inputState[0];
+  var setInput = inputState[1];
+  var socketRef = useRef(null);
+  var bottomRef = useRef(null);
+  var connectedRef = useRef(false);
+
+  useEffect(function() {
+    if (connectedRef.current) return;
+
+    function initSocket() {
+      if (!window.io) return;
+      connectedRef.current = true;
+      var socket = window.io();
+      socketRef.current = socket;
+
+      socket.emit('join-group', { groupId: groupId, userId: userId, userName: userName });
+
+      socket.on('chat-history', function(history) {
+        setMessages(history);
+      });
+
+      socket.on('new-message', function(msg) {
+        setMessages(function(prev) { return prev.concat([msg]); });
+      });
+
+      socket.on('user-joined', function(data) {
+        setMessages(function(prev) {
+          return prev.concat([{ id: 'sys-' + Date.now(), system: true, text: data.userName + ' joined the chat' }]);
+        });
+      });
+    }
+
+    if (window.io) {
+      initSocket();
+    } else {
+      var existing = document.querySelector('script[src="/socket.io/socket.io.js"]');
+      if (!existing) {
+        var script = document.createElement('script');
+        script.src = '/socket.io/socket.io.js';
+        script.onload = initSocket;
+        document.head.appendChild(script);
+      } else {
+        var check = setInterval(function() {
+          if (window.io) { clearInterval(check); initSocket(); }
+        }, 100);
+      }
+    }
+
+    return function() {
+      if (socketRef.current) {
+        socketRef.current.disconnect();
+        connectedRef.current = false;
+      }
+    };
+  }, [groupId]);
+
+  useEffect(function() {
+    if (bottomRef.current) bottomRef.current.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  const sendMessage = () => {
-    if (!input.trim()) return;
-    const now = new Date();
-    const timeStr =
-      now.getHours().toString().padStart(2, '0') + ':' +
-      now.getMinutes().toString().padStart(2, '0');
-
-    setMessages((prev) => [
-      ...prev,
-      {
-        id: Date.now(),
-        user: userName,
-        text: input.trim(),
-        time: timeStr,
-        self: true,
-      },
-    ]);
+  var sendMessage = function() {
+    if (!input.trim() || !socketRef.current) return;
+    socketRef.current.emit('send-message', {
+      groupId: groupId,
+      userId: userId,
+      userName: userName,
+      text: input.trim()
+    });
     setInput('');
   };
 
-  const handleKeyDown = (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      sendMessage();
-    }
+  var handleKey = function(e) {
+    if (e.key === 'Enter') sendMessage();
   };
 
-  return (
-    <div className="chatbox">
-      <div className="chatbox__messages">
-        {messages.map((msg) => (
-          <div
-            key={msg.id}
-            className={`chatbox__bubble-wrap ${msg.self ? 'chatbox__bubble-wrap--self' : ''}`}
-          >
-            {!msg.self && <span className="chatbox__sender">{msg.user}</span>}
-            <div className={`chatbox__bubble ${msg.self ? 'chatbox__bubble--self' : ''}`}>
-              {msg.text}
-            </div>
-            <span className="chatbox__time">{msg.time}</span>
-          </div>
-        ))}
-        <div ref={bottomRef} />
-      </div>
-
-      <div className="chatbox__input-area">
-        <input
-          className="chatbox__input"
-          type="text"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={handleKeyDown}
-          placeholder="Type a message..."
-        />
-        <button className="chatbox__send" onClick={sendMessage}>
-          Send
-        </button>
-      </div>
-    </div>
+  return React.createElement('div', { className: compact ? 'cb cb--compact' : 'cb' },
+    !compact && React.createElement('div', { className: 'cb__header' },
+      React.createElement('div', { className: 'cb__header-icon', style: { backgroundColor: groupColor } }),
+      React.createElement('div', { className: 'cb__header-info' },
+        React.createElement('div', { className: 'cb__header-name' }, groupName),
+        React.createElement('div', { className: 'cb__header-status' },
+          React.createElement('span', { className: 'cb__status-dot' }),
+          'Online'
+        )
+      )
+    ),
+    React.createElement('div', { className: 'cb__messages' },
+      messages.map(function(m) {
+        if (m.system) {
+          return React.createElement('div', { key: m.id, className: 'cb__system' }, m.text);
+        }
+        var isSelf = String(m.userId) === String(userId);
+        return React.createElement('div', { key: m.id, className: 'cb__row' + (isSelf ? ' cb__row--self' : '') },
+          !isSelf && React.createElement('div', { className: 'cb__avatar', style: { backgroundColor: '#E8933A' } }),
+          React.createElement('div', { className: 'cb__bubble-group' },
+            !isSelf && React.createElement('span', { className: 'cb__sender' }, m.userName || m.user),
+            React.createElement('div', { className: 'cb__bubble' + (isSelf ? ' cb__bubble--self' : '') }, m.text)
+          ),
+          isSelf && React.createElement('div', { className: 'cb__avatar cb__avatar--self' })
+        );
+      }),
+      messages.length === 0 && React.createElement('div', { className: 'cb__empty' }, 'No messages yet. Say hello!'),
+      React.createElement('div', { ref: bottomRef })
+    ),
+    React.createElement('div', { className: 'cb__input-area' },
+      React.createElement('div', { className: 'cb__input-wrap' },
+        React.createElement('input', {
+          className: 'cb__input',
+          type: 'text',
+          value: input,
+          onChange: function(e) { setInput(e.target.value); },
+          onKeyDown: handleKey,
+          placeholder: 'Type a message'
+        }),
+        React.createElement('button', { className: 'cb__send-btn', onClick: sendMessage },
+          React.createElement('img', { src: '/icons/Send Icon Bold.svg', alt: 'Send', style: { width: 20, height: 20 } })
+        )
+      )
+    )
   );
 };
 

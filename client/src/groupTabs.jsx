@@ -4,12 +4,14 @@ import { createRoot } from 'react-dom/client';
 import TabSwitcher from './components/TabSwitcher';
 import Sidebar from './components/Sidebar';
 import ChatBox from './components/ChatBox';
+import ChatOverlay from './components/ChatOverlay';
 import ItineraryBuilder from './components/ItineraryBuilder';
 import VotingSystem from './components/VotingSystem';
 
 import './styles/tab-switcher.css';
 import './styles/sidebar.css';
 import './styles/chatbox.css';
+import './styles/chat-overlay.css';
 import './styles/itinerary-builder.css';
 import './styles/voting-system.css';
 
@@ -18,6 +20,7 @@ var mount = document.getElementById('group-tabs-root');
 if (mount) {
   var groupId = mount.dataset.groupId;
   var userId = mount.dataset.userId;
+  var userName = mount.dataset.userName || 'You';
   var groupName = mount.dataset.groupName;
   var tripDays = parseInt(mount.dataset.tripDays) || 7;
 
@@ -30,27 +33,35 @@ if (mount) {
     var activeGroup = groupState[0];
     var setActiveGroup = groupState[1];
 
+    var chatProps = {
+      groupId: activeGroup.id || groupId,
+      userId: userId,
+      userName: userName,
+      groupName: activeGroup.name || groupName || 'Rome',
+      groupColor: activeGroup.color || '#3B5F8A'
+    };
+
     return React.createElement('div', { className: 'gp-app' },
       React.createElement(TabSwitcher, { active: activeTab, onChange: setActiveTab }),
       React.createElement('div', { className: 'gp-content' },
+
         activeTab === 'chat' && React.createElement(React.Fragment, null,
           React.createElement(Sidebar, {
             activeGroup: activeGroup,
             onSelect: function(g) { setActiveGroup(g); }
           }),
-          React.createElement(ChatBox, {
-            groupId: activeGroup.id || groupId,
-            userId: userId,
-            userName: 'You',
-            groupName: activeGroup.name || groupName || 'Rome',
-            groupColor: activeGroup.color || '#3B5F8A'
-          })
+          React.createElement(ChatBox, chatProps)
         ),
-        activeTab === 'itinerary' && React.createElement(ItineraryBuilder, {
-          tripId: groupId,
-          tripDays: tripDays
-        }),
-        activeTab === 'discover' && React.createElement(VotingSystem, null)
+
+        activeTab === 'discover' && React.createElement('div', { className: 'gp-tab-with-overlay' },
+          React.createElement(VotingSystem, null),
+          React.createElement(ChatOverlay, chatProps)
+        ),
+
+        activeTab === 'itinerary' && React.createElement('div', { className: 'gp-tab-with-overlay' },
+          React.createElement(ItineraryBuilder, { tripId: groupId, tripDays: tripDays }),
+          React.createElement(ChatOverlay, chatProps)
+        )
       )
     );
   };
