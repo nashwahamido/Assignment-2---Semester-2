@@ -21,7 +21,9 @@ if (mount) {
   var groupId = mount.dataset.groupId;
   var userId = mount.dataset.userId;
   var userName = mount.dataset.userName || 'You';
+  var userAvatar = mount.dataset.userAvatar || '';
   var groupName = mount.dataset.groupName;
+  var groupPhoto = mount.dataset.groupPhoto || '';
   var tripDays = parseInt(mount.dataset.tripDays) || 7;
 
   var App = function() {
@@ -37,8 +39,10 @@ if (mount) {
       groupId: activeGroup.id || groupId,
       userId: userId,
       userName: userName,
+      userAvatar: userAvatar,
       groupName: activeGroup.name || groupName || 'Rome',
-      groupColor: activeGroup.color || '#3B5F8A'
+      groupColor: activeGroup.color || '#3B5F8A',
+      groupPhoto: groupPhoto
     };
 
     return React.createElement('div', { className: 'gp-app' },

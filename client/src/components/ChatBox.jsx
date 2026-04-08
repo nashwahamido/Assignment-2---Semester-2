@@ -5,8 +5,10 @@ var ChatBox = function(props) {
   var groupId = props.groupId || '1';
   var userId = props.userId || '1';
   var userName = props.userName || 'You';
+  var userAvatar = props.userAvatar || '';
   var groupName = props.groupName || 'Rome';
   var groupColor = props.groupColor || '#3B5F8A';
+  var groupPhoto = props.groupPhoto || '';
   var compact = props.compact || false;
 
   var msgState = useState([]);
@@ -28,7 +30,7 @@ var ChatBox = function(props) {
       var socket = window.io();
       socketRef.current = socket;
 
-      socket.emit('join-group', { groupId: groupId, userId: userId, userName: userName });
+      socket.emit('join-group', { groupId: groupId, userId: userId, userName: userName, userAvatar: userAvatar });
 
       socket.on('chat-history', function(history) {
         setMessages(history);
@@ -79,6 +81,7 @@ var ChatBox = function(props) {
       groupId: groupId,
       userId: userId,
       userName: userName,
+      userAvatar: userAvatar,
       text: input.trim()
     });
     setInput('');
@@ -88,9 +91,28 @@ var ChatBox = function(props) {
     if (e.key === 'Enter') sendMessage();
   };
 
+  function renderAvatar(avatarUrl, fallbackColor, extraClass) {
+    var cls = 'cb__avatar' + (extraClass ? ' ' + extraClass : '');
+    if (avatarUrl) {
+      return React.createElement('div', { className: cls },
+        React.createElement('img', { src: avatarUrl, alt: '', style: { width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' } })
+      );
+    }
+    return React.createElement('div', { className: cls, style: { backgroundColor: fallbackColor } });
+  }
+
+  var headerIcon;
+  if (groupPhoto) {
+    headerIcon = React.createElement('div', { className: 'cb__header-icon', style: { overflow: 'hidden' } },
+      React.createElement('img', { src: groupPhoto, alt: '', style: { width: '100%', height: '100%', objectFit: 'cover', borderRadius: '10px' } })
+    );
+  } else {
+    headerIcon = React.createElement('div', { className: 'cb__header-icon', style: { backgroundColor: groupColor } });
+  }
+
   return React.createElement('div', { className: compact ? 'cb cb--compact' : 'cb' },
     !compact && React.createElement('div', { className: 'cb__header' },
-      React.createElement('div', { className: 'cb__header-icon', style: { backgroundColor: groupColor } }),
+      headerIcon,
       React.createElement('div', { className: 'cb__header-info' },
         React.createElement('div', { className: 'cb__header-name' }, groupName),
         React.createElement('div', { className: 'cb__header-status' },
@@ -105,13 +127,14 @@ var ChatBox = function(props) {
           return React.createElement('div', { key: m.id, className: 'cb__system' }, m.text);
         }
         var isSelf = String(m.userId) === String(userId);
+        var avatarUrl = isSelf ? userAvatar : (m.userAvatar || '');
         return React.createElement('div', { key: m.id, className: 'cb__row' + (isSelf ? ' cb__row--self' : '') },
-          !isSelf && React.createElement('div', { className: 'cb__avatar', style: { backgroundColor: '#E8933A' } }),
+          !isSelf && renderAvatar(avatarUrl, '#E8933A', ''),
           React.createElement('div', { className: 'cb__bubble-group' + (isSelf ? ' cb__bubble-group--self' : '') },
             React.createElement('span', { className: 'cb__sender' + (isSelf ? ' cb__sender--self' : '') }, isSelf ? userName : (m.userName || m.user)),
             React.createElement('div', { className: 'cb__bubble' + (isSelf ? ' cb__bubble--self' : '') }, m.text)
           ),
-          isSelf && React.createElement('div', { className: 'cb__avatar cb__avatar--self', style: { backgroundColor: '#3B5F8A' } })
+          isSelf && renderAvatar(userAvatar, '#3B5F8A', 'cb__avatar--self')
         );
       }),
       messages.length === 0 && React.createElement('div', { className: 'cb__empty' }, 'No messages yet. Say hello!'),

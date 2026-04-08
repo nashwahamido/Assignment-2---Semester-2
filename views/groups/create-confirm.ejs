@@ -32,12 +32,15 @@
           <a href="/groups/<%= typeof group !== 'undefined' && group ? group.id : '1' %>" class="gc-go-btn">Skip to Group</a>
         </div>
         <div class="gc-right">
-          <div class="gc-upload-circle" id="uploadCircle">
-            <svg class="gc-img-icon" viewBox="0 0 24 24" fill="none"><rect x="2" y="2" width="20" height="20" rx="4" stroke="#9aa" stroke-width="1.5"/><path d="M2 16l5-5 4 4 3-3 8 8H6a4 4 0 01-4-4v0z" fill="#bcc"/><circle cx="8.5" cy="8.5" r="2" fill="#bcc"/></svg>
-            <img class="gc-preview" id="previewImg" alt="Preview">
-            <input type="file" accept="image/*" id="groupPicInput">
-          </div>
-          <a href="#" class="gc-upload-btn" onclick="document.getElementById('groupPicInput').click();return false;">Upload Profile Picture</a>
+          <form action="/groups/upload-photo" method="post" enctype="multipart/form-data" id="groupPhotoForm">
+            <input type="hidden" name="groupId" value="<%= typeof group !== 'undefined' && group ? group.id : '' %>">
+            <div class="gc-upload-circle" id="uploadCircle" onclick="document.getElementById('groupPicInput').click();" style="cursor:pointer;">
+              <svg class="gc-img-icon" id="photoPlaceholder" viewBox="0 0 24 24" fill="none"><rect x="2" y="2" width="20" height="20" rx="4" stroke="#9aa" stroke-width="1.5"/><path d="M2 16l5-5 4 4 3-3 8 8H6a4 4 0 01-4-4v0z" fill="#bcc"/><circle cx="8.5" cy="8.5" r="2" fill="#bcc"/></svg>
+              <img class="gc-preview" id="previewImg" alt="Preview">
+              <input type="file" name="groupPhoto" accept="image/*" id="groupPicInput" style="display:none;">
+            </div>
+            <button type="button" class="gc-upload-btn" id="uploadBtn" onclick="document.getElementById('groupPicInput').click();">Upload Group Picture</button>
+          </form>
         </div>
       </div>
     </div>
@@ -47,7 +50,22 @@
 <script>
   var s=localStorage.getItem('atlasphere-theme');if(s)document.documentElement.setAttribute('data-theme',s);
   function copyLink(){var l=document.getElementById('inviteLinkHidden').value;if(!l)return;navigator.clipboard.writeText(l).then(function(){var t=document.getElementById('copiedToast');t.style.display='block';setTimeout(function(){t.style.display='none';},2000);});}
-  document.getElementById('groupPicInput').addEventListener('change',function(e){var f=e.target.files[0];if(!f)return;var r=new FileReader();r.onload=function(ev){var i=document.getElementById('previewImg');i.src=ev.target.result;i.style.display='block';};r.readAsDataURL(f);});
+
+  document.getElementById('groupPicInput').addEventListener('change',function(e){
+    var f=e.target.files[0];
+    if(!f)return;
+    var r=new FileReader();
+    r.onload=function(ev){
+      var i=document.getElementById('previewImg');
+      i.src=ev.target.result;
+      i.style.display='block';
+      document.getElementById('photoPlaceholder').style.display='none';
+    };
+    r.readAsDataURL(f);
+    var btn=document.getElementById('uploadBtn');
+    btn.textContent='Save Group Picture';
+    btn.onclick=function(){ document.getElementById('groupPhotoForm').submit(); };
+  });
 </script>
 </body>
 </html>

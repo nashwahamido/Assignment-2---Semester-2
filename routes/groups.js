@@ -26,14 +26,23 @@ router.get("/api/my-groups", function (req, res) {
       })
     : [];
 
-  res.json(userGroups.map(function (g) {
-    return { id: g.id, name: g.name, destination: g.destination, flag: g.flag || "", color: g.color || "#3B5F8A" };
-  }));
+  var result = userGroups.map(function (g) {
+    return { id: g.id, name: g.name, destination: g.destination, flag: g.flag || "", color: g.color || "#3B5F8A", photo: g.photo || "" };
+  });
+  console.log("API my-groups response:", JSON.stringify(result.map(function(g) { return { name: g.name, photo: g.photo }; })));
+  res.json(result);
 });
 
 // ── Group creation flow (MUST be before /:id) ───────────────────────────
 
-router.get("/create/country", function (req, res) {
+function requireGroupAuth(req, res, next) {
+  if (!req.session.user) {
+    return res.redirect("/auth/login");
+  }
+  next();
+}
+
+router.get("/create/country", requireGroupAuth, function (req, res) {
   res.render("groups/create-country", {
     title: "Choose Destination",
     user: req.session.user || null,
@@ -41,7 +50,7 @@ router.get("/create/country", function (req, res) {
   });
 });
 
-router.get("/create/city", function (req, res) {
+router.get("/create/city", requireGroupAuth, function (req, res) {
   var countryName = req.query.country || "";
   var country = countries.find(function (c) {
     return c.name.toLowerCase() === countryName.toLowerCase();
@@ -58,7 +67,7 @@ router.get("/create/city", function (req, res) {
   });
 });
 
-router.get("/create/days", function (req, res) {
+router.get("/create/days", requireGroupAuth, function (req, res) {
   res.render("groups/create-days", {
     title: "Trip Length",
     user: req.session.user || null,
@@ -68,7 +77,7 @@ router.get("/create/days", function (req, res) {
 });
 
 // Create the group and show confirm page with invite options
-router.get("/create/confirm", function (req, res) {
+router.get("/create/confirm", requireGroupAuth, function (req, res) {
   var groups = getGroups(req);
   var user = req.session.user;
 
@@ -115,8 +124,43 @@ router.get("/create/confirm", function (req, res) {
   });
 });
 
+// ── Upload group photo ──────────────────────────────────────────────────
+router.post("/upload-photo", requireGroupAuth, function (req, res) {
+  var groups = getGroups(req);
+  var groupId = req.body.groupId;
+  var group = groups.find(function (g) { return g.id == groupId; });
+
+  if (!group || !req.files || !req.files.groupPhoto) {
+    return res.redirect("back");
+  }
+
+  var path = require("path");
+  var fs = require("fs");
+  var file = req.files.groupPhoto;
+  var uploadDir = path.join(__dirname, "..", "assets", "uploads");
+
+  if (!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir, { recursive: true });
+  }
+
+  var timestamp = new Date().toISOString().replace(/[-:T]/g, "").slice(0, 15);
+  var safeName = file.name.replace(/[^a-zA-Z0-9.\-_]/g, "_");
+  var fileName = "group_" + groupId + "_" + timestamp + "_" + safeName;
+  var filePath = path.join(uploadDir, fileName);
+
+  file.mv(filePath, function (err) {
+    if (err) {
+      console.error("Group photo upload error:", err);
+      return res.redirect("/groups/" + groupId);
+    }
+    group.photo = "/uploads/" + fileName;
+    console.log("Group photo saved:", group.photo);
+    res.redirect("/groups/" + groupId);
+  });
+});
+
 // ── Invite by email ─────────────────────────────────────────────────────
-router.post("/invite", async function (req, res) {
+router.post("/invite", requireGroupAuth, async function (req, res) {
   var groups = getGroups(req);
   var groupId = req.body.groupId;
   var friendEmail = req.body.friendEmail;

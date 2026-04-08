@@ -203,6 +203,7 @@ app.post("/auth/login", (req, res) => {
         id: user.IDuser,
         username: user.username,
         email: user.email,
+        profilePictureUrl: user.profilePictureUrl || '',
       };
 
       req.session.save((err) => {
@@ -738,7 +739,7 @@ io.on("connection", function(socket) {
   socket.on("join-group", function(data) {
     var room = "group-" + data.groupId;
     socket.join(room);
-    socket.userData = { userId: data.userId, userName: data.userName, groupId: data.groupId };
+    socket.userData = { userId: data.userId, userName: data.userName, groupId: data.groupId, userAvatar: data.userAvatar || '' };
     socket.emit("chat-history", chatHistory[room] || []);
     socket.to(room).emit("user-joined", { userName: data.userName });
     console.log(data.userName + " joined room " + room);
@@ -750,6 +751,7 @@ io.on("connection", function(socket) {
       id: Date.now() + "-" + Math.random().toString(36).substr(2, 5),
       userId: data.userId,
       userName: data.userName,
+      userAvatar: data.userAvatar || '',
       user: data.userName,
       text: data.text,
       time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })

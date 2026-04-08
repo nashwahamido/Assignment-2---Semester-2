@@ -63,7 +63,8 @@ var Sidebar = function(props) {
           className: 'sb__item' + (isActive ? ' sb__item--active' : ''),
           onClick: function(e) { e.preventDefault(); if (onSelect) onSelect(g); }
         },
-          React.createElement('div', { className: 'sb__item-icon', style: { backgroundColor: g.color || '#3B5F8A' } },
+          React.createElement('div', { className: 'sb__item-icon', style: { backgroundColor: g.color || '#3B5F8A', overflow: 'hidden' } },
+            g.photo ? React.createElement('img', { src: g.photo, alt: '', style: { width: '100%', height: '100%', objectFit: 'cover', borderRadius: '12px' } }) :
             g.flag ? React.createElement('span', { style: { fontSize: '22px', lineHeight: '44px' } }, g.flag) : null
           ),
           React.createElement('div', { className: 'sb__item-info' },
