@@ -26,15 +26,17 @@ var ChatOverlay = function(props) {
         groupId: props.groupId,
         userId: props.userId,
         userName: props.userName,
+        userAvatar: props.userAvatar || '',
         groupName: props.groupName,
         groupColor: props.groupColor,
+        groupPhoto: props.groupPhoto || '',
         compact: true
       })
     ),
     React.createElement('button', {
       className: 'co__toggle' + (isOpen ? ' co__toggle--open' : ''),
       onClick: function() { setIsOpen(!isOpen); }
-    }, 'Chat')
+    }, (props.groupName || 'Chat') + ' Chat')
   );
 };
 
