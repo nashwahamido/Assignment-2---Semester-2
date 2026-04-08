@@ -26,17 +26,33 @@ router.post('/update', (req, res) => {
 
 // ── Delete account ─────────────────────────────────────────────────────
 router.post('/delete', (req, res) => {
-  if (!req.session.user) return res.redirect('/auth/login');
+  console.log('Delete route hit');
+  console.log('Session user:', req.session.user);
+
+  if (!req.session.user) {
+    console.log('No session user - redirecting to login');
+    return res.redirect('/auth/login');
+  }
+
   const connection = req.app.get('db');
+  const userId = req.session.user.id || req.session.user.IDuser;
+
+  console.log('Deleting user ID:', userId);
+
+  if (!userId) {
+    console.error('No user ID found in session');
+    return res.redirect('/settings');
+  }
 
   connection.query(
     'DELETE FROM tbl_users WHERE IDuser = ?',
-    [req.session.user.id],
-    function(err) {
+    [userId],
+    function(err, result) {
       if (err) {
         console.error('Delete error:', err.message);
         return res.redirect('/settings');
       }
+      console.log('Deleted rows:', result.affectedRows);
       req.session.destroy(() => {
         res.render('account-deleted', { user: null });
       });
