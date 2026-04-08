@@ -211,7 +211,19 @@ app.post("/auth/login", (req, res) => {
           console.error("Session save error:", err);
           return res.status(500).send("Session error");
         }
-        res.redirect("/profile");
+
+        // Check if user has any groups — if so, go straight to groups
+        connection.query(
+          "SELECT COUNT(*) as cnt FROM tbl_group_members WHERE userId = ?",
+          [user.IDuser],
+          function (grpErr, grpRows) {
+            if (!grpErr && grpRows && grpRows[0].cnt > 0) {
+              res.redirect("/groups");
+            } else {
+              res.redirect("/profile");
+            }
+          }
+        );
       });
     }
   );
@@ -749,7 +761,7 @@ io.on("connection", function(socket) {
 
     // Load last 100 messages from DB
     connection.query(
-      "SELECT id, groupId, userId, userName, userAvatar, text, time, system FROM tbl_chat_messages WHERE groupId = ? ORDER BY createdAt ASC LIMIT 100",
+      "SELECT id, groupId, userId, userName, userAvatar, `text`, `time`, `system` FROM tbl_chat_messages WHERE groupId = ? ORDER BY createdAt ASC LIMIT 100",
       [data.groupId],
       function (err, rows) {
         var history = [];
@@ -782,7 +794,7 @@ io.on("connection", function(socket) {
 
     // Save to DB
     connection.query(
-      "INSERT INTO tbl_chat_messages (id, groupId, userId, userName, userAvatar, text, time, system) VALUES (?, ?, ?, ?, ?, ?, ?, 0)",
+      "INSERT INTO tbl_chat_messages (id, groupId, userId, userName, userAvatar, `text`, `time`, `system`) VALUES (?, ?, ?, ?, ?, ?, ?, 0)",
       [msgId, data.groupId, data.userId, data.userName, data.userAvatar || '', data.text, timeStr],
       function (err) {
         if (err) console.error("Message save error:", err.message);

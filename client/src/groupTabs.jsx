@@ -42,7 +42,7 @@ if (mount) {
       userAvatar: userAvatar,
       groupName: activeGroup.name || groupName || 'Rome',
       groupColor: activeGroup.color || '#3B5F8A',
-      groupPhoto: groupPhoto
+      groupPhoto: activeGroup.photo !== undefined ? activeGroup.photo : groupPhoto
     };
 
     return React.createElement('div', { className: 'gp-app' },
