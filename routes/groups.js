@@ -219,6 +219,9 @@ router.post("/invite", requireGroupAuth, async function (req, res) {
     var inviteLink = req.protocol + "://" + req.get("host") + "/groups/join/" + group.inviteCode;
     var transporter = req.app.locals.transporter;
 
+    console.log(transporter);
+    console.log(inviteLink);
+
     if (!transporter) {
       return res.render("groups/create-confirm", {
         title: "Group Created", user: user, group: group,
