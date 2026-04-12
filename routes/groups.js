@@ -102,9 +102,16 @@ router.get("/create/confirm", requireGroupAuth, function (req, res) {
   var db = getDb(req);
   var user = req.session.user;
 
-  var countryName = req.query.country || "My Trip";
-  var cities = req.query.cities || "";
-  var days = parseInt(req.query.days) || 7;
+var countryName = req.query.country || "My Trip";
+var cities = req.query.cities || "";
+var days = parseInt(req.query.days) || 7;
+var inviteCode = generateInviteCode();
+
+var cityList = cities.split(",").map(function (c) {
+  return c.trim();
+}).filter(Boolean);
+
+var primaryCity = cityList.length > 0 ? cityList[0] : countryName;
   var inviteCode = generateInviteCode();
 
   var country = countries.find(function (c) {
@@ -116,17 +123,17 @@ router.get("/create/confirm", requireGroupAuth, function (req, res) {
   var groupId = Date.now();
   var colorIndex = groupId % colors.length;
 
-  var groupData = {
-    id: groupId,
-    name: countryName,
-    destination: countryName,
-    flag: flag,
-    cities: cities,
-    inviteCode: inviteCode,
-    days: days,
-    color: colors[colorIndex],
-    createdBy: user.id
-  };
+var groupData = {
+  id: groupId,
+  name: countryName,
+  destination: primaryCity,
+  flag: flag,
+  cities: cities,
+  inviteCode: inviteCode,
+  days: days,
+  color: colors[colorIndex],
+  createdBy: user.id
+};
 
   // Insert group into DB
   db.query(
@@ -292,6 +299,7 @@ router.get("/", function (req, res) {
       return res.redirect("/groups/create/country");
     }
 
+    console.log("GROUP OBJECT:", userGroups[0]);
     res.render("groups/groupPage", {
       user: user,
       group: userGroups[0],
@@ -317,6 +325,7 @@ router.get("/:id", function (req, res) {
     }
 
     loadUserGroups(db, user.id, function (err2, userGroups) {
+      console.log("GROUP OBJECT:", group);
       res.render("groups/groupPage", {
         user: user,
         group: group,

@@ -23,6 +23,7 @@ if (mount) {
   var userName = mount.dataset.userName || 'You';
   var userAvatar = mount.dataset.userAvatar || '';
   var groupName = mount.dataset.groupName;
+  var groupDestination = mount.dataset.groupDestination;
   var groupPhoto = mount.dataset.groupPhoto || '';
   var tripDays = parseInt(mount.dataset.tripDays) || 7;
 
@@ -61,7 +62,10 @@ if (mount) {
         // Discover tab — always mounted, hidden when not active
         React.createElement('div', { style: { display: activeTab === 'discover' ? 'contents' : 'none' } },
           React.createElement('div', { className: 'gp-tab-with-overlay' },
-            React.createElement(VotingSystem, null),
+            React.createElement(VotingSystem, {
+            destination: groupDestination,
+            groupId: groupId
+          }),
             React.createElement(ChatOverlay, chatProps)
           )
         ),

@@ -1,50 +1,9 @@
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import "../styles/voting-system.css";
 
 var MAX_VISIBILITY = 2;
 
-var activities = [
-  {
-    id: 1,
-    name: "Basilica",
-    tags: ["Culture", "Nature"],
-    description: "St. Peter's Basilica is a church of the Italian High Renaissance located in Vatican City.",
-    image: "/images/basilica.jpg",
-  },
-  {
-    id: 2,
-    name: "Colosseum",
-    tags: ["Culture"],
-    description: "Explore one of Rome's most iconic landmarks and discover ancient Roman history.",
-    image: "/images/colosseum.jpg",
-  },
-  {
-    id: 3,
-    name: "Trevi",
-    tags: ["Relax"],
-    description: "Visit the famous fountain and enjoy one of Rome's most loved city spots.",
-    image: "/images/trevi.jpg",
-  },
-  {
-    id: 4,
-    name: "Pantheon",
-    tags: ["Culture"],
-    description: "Visit a masterpiece of ancient Roman architecture in the heart of the city.",
-    image: "/images/pantheon.jpg",
-  },
-  {
-    id: 5,
-    name: "Villa",
-    tags: ["Nature"],
-    description: "Relax in one of Rome's most beautiful green spaces and scenic gardens.",
-    image: "/images/villa.jpg",
-  },
-];
-
 var icons = {
-  message: "/icons/Message Icon.svg",
-  discover: "/icons/Discover Icon.svg",
-  calendar: "/icons/Calendar Icon.svg",
   send: "/icons/Send Icon Bold.svg",
   yes: "/icons/Thumbs Up Icon.svg",
   no: "/icons/Thumbs Down Icon.svg",
@@ -65,8 +24,12 @@ function ActivityCard({ activity, vote, onVote }) {
 
       <div className="vote-card-content">
         <div className="tag-list">
-          {activity.tags.map(function(tag) {
-            return <span key={tag} className="activity-tag">{tag}</span>;
+          {(activity.tags || []).map(function (tag) {
+            return (
+              <span key={tag} className="activity-tag">
+                {tag}
+              </span>
+            );
           })}
         </div>
 
@@ -79,7 +42,9 @@ function ActivityCard({ activity, vote, onVote }) {
           <button
             type="button"
             className={"vote-button" + (vote === "yes" ? " selected" : "")}
-            onClick={function() { onVote("yes"); }}
+            onClick={function () {
+              onVote("yes");
+            }}
             aria-label={"Vote yes for " + activity.name}
           >
             <img src={icons.yes} alt="" className="vote-icon" />
@@ -88,7 +53,9 @@ function ActivityCard({ activity, vote, onVote }) {
           <button
             type="button"
             className={"vote-button maybe-button" + (vote === "maybe" ? " selected" : "")}
-            onClick={function() { onVote("maybe"); }}
+            onClick={function () {
+              onVote("maybe");
+            }}
             aria-label={"Vote maybe for " + activity.name}
           >
             <img src={icons.maybe} alt="" className="vote-icon maybe-icon" />
@@ -97,7 +64,9 @@ function ActivityCard({ activity, vote, onVote }) {
           <button
             type="button"
             className={"vote-button" + (vote === "no" ? " selected" : "")}
-            onClick={function() { onVote("no"); }}
+            onClick={function () {
+              onVote("no");
+            }}
             aria-label={"Vote no for " + activity.name}
           >
             <img src={icons.no} alt="" className="vote-icon" />
@@ -111,18 +80,26 @@ function ActivityCard({ activity, vote, onVote }) {
 function Carousel({ children, active, setActive }) {
   var count = React.Children.count(children);
 
+  if (count === 0) {
+    return null;
+  }
+
   return (
     <div className="carousel-3d">
       <button
         type="button"
         className="nav-btn left"
-        onClick={function() { setActive(function(i) { return (i - 1 + count) % count; }); }}
+        onClick={function () {
+          setActive(function (i) {
+            return (i - 1 + count) % count;
+          });
+        }}
         aria-label="Previous"
       >
         <img src={icons.left} alt="" className="nav-icon nav-icon-white" />
       </button>
 
-      {React.Children.map(children, function(child, i) {
+      {React.Children.map(children, function (child, i) {
         return (
           <div
             className="card-container"
@@ -145,7 +122,11 @@ function Carousel({ children, active, setActive }) {
       <button
         type="button"
         className="nav-btn right"
-        onClick={function() { setActive(function(i) { return (i + 1) % count; }); }}
+        onClick={function () {
+          setActive(function (i) {
+            return (i + 1) % count;
+          });
+        }}
         aria-label="Next"
       >
         <img src={icons.right} alt="" className="nav-icon nav-icon-white" />
@@ -154,16 +135,64 @@ function Carousel({ children, active, setActive }) {
   );
 }
 
-export default function VotingSystem() {
-  var activeState = useState(2);
+export default function VotingSystem(props) {
+  var destination = props.destination || "Rome";
+  console.log("VotingSystem destination:", destination);
+  var groupId = props.groupId || "";
+  var activeState = useState(0);
   var active = activeState[0];
   var setActive = activeState[1];
+
   var votesState = useState({});
   var votes = votesState[0];
   var setVotes = votesState[1];
 
-  var handleVote = function(activityId, choice) {
-    setVotes(function(prev) {
+  var activitiesState = useState([]);
+  var activities = activitiesState[0];
+  var setActivities = activitiesState[1];
+
+  var loadingState = useState(true);
+  var loading = loadingState[0];
+  var setLoading = loadingState[1];
+
+  var errorState = useState("");
+  var error = errorState[0];
+  var setError = errorState[1];
+
+  var preferences = useMemo(function () {
+    try {
+      return JSON.parse(localStorage.getItem("activityPreferences")) || [];
+    } catch (e) {
+      return [];
+    }
+  }, []);
+
+ useEffect(function () {
+  fetch(
+  "/api/recommendations?city=" +
+    encodeURIComponent(destination) +
+    "&activities=" +
+    encodeURIComponent(preferences.join(","))
+)
+      .then(function (res) {
+        if (!res.ok) {
+          throw new Error("Failed to load recommendations");
+        }
+        return res.json();
+      })
+      .then(function (data) {
+        setActivities(Array.isArray(data) ? data : []);
+        setLoading(false);
+      })
+      .catch(function (err) {
+        console.error(err);
+        setError("Could not load recommendations right now.");
+        setLoading(false);
+      });
+  }, [preferences, destination]);
+
+  var handleVote = function (activityId, choice) {
+    setVotes(function (prev) {
       var next = {};
       for (var k in prev) next[k] = prev[k];
       next[activityId] = choice;
@@ -171,22 +200,63 @@ export default function VotingSystem() {
     });
   };
 
+  if (loading) {
+    return (
+      <main className="voting-page">
+        <section className="voting-section">
+          <header className="voting-header">
+            <h1>Recommended</h1>
+            <p>Loading things to do for your trip...</p>
+          </header>
+        </section>
+      </main>
+    );
+  }
+
+  if (error) {
+    return (
+      <main className="voting-page">
+        <section className="voting-section">
+          <header className="voting-header">
+            <h1>Recommended</h1>
+            <p>{error}</p>
+          </header>
+        </section>
+      </main>
+    );
+  }
+
+  if (activities.length === 0) {
+    return (
+      <main className="voting-page">
+        <section className="voting-section">
+          <header className="voting-header">
+            <h1>Recommended</h1>
+            <p>No recommendations found for this destination yet.</p>
+          </header>
+        </section>
+      </main>
+    );
+  }
+
   return (
     <main className="voting-page">
       <section className="voting-section">
         <header className="voting-header">
           <h1>Recommended</h1>
-          <p>Vote for things to do in Rome</p>
+          <p>Vote for things to do based on your group’s interests.</p>
         </header>
 
         <Carousel active={active} setActive={setActive}>
-          {activities.map(function(activity) {
+          {activities.map(function (activity) {
             return (
               <ActivityCard
                 key={activity.id}
                 activity={activity}
                 vote={votes[activity.id]}
-                onVote={function(choice) { handleVote(activity.id, choice); }}
+                onVote={function (choice) {
+                  handleVote(activity.id, choice);
+                }}
               />
             );
           })}

@@ -735,11 +735,234 @@ app.get("/settings", requireAuth, (req, res) => {
   );
 });
 
-
+// ── Activities ────────────────────────────────────────────────
+app.get("/groups/create/activities", requireAuth, (req, res) => {
+  res.render("groups/activities", {
+    title: "Activities",
+    user: req.session.user || null
+  });
+});
 
 // ── GROUPS / USERS ROUTES ────────────────────────────────────────────────
 app.use("/groups", require("./routes/groups"));
 app.use("/users", require("./routes/users"));
+
+// ── API Route ────────────────────────────────────────────────
+const axios = require("axios");
+
+function inferTags(name, ranking, subcategory) {
+  var text = [
+    name || "",
+    ranking || "",
+    subcategory || ""
+  ].join(" ").toLowerCase();
+
+  var tags = [];
+
+  if (
+    text.includes("museum") ||
+    text.includes("church") ||
+    text.includes("cathedral") ||
+    text.includes("historic") ||
+    text.includes("monument") ||
+    text.includes("archae")
+  ) {
+    tags.push("Culture");
+  }
+
+  if (
+    text.includes("park") ||
+    text.includes("garden") ||
+    text.includes("beach") ||
+    text.includes("nature") ||
+    text.includes("trail")
+  ) {
+    tags.push("Nature");
+  }
+
+  if (
+    text.includes("bar") ||
+    text.includes("night") ||
+    text.includes("club") ||
+    text.includes("pub")
+  ) {
+    tags.push("Nightlife");
+  }
+
+  if (
+    text.includes("food") ||
+    text.includes("market") ||
+    text.includes("wine") ||
+    text.includes("culinary")
+  ) {
+    tags.push("Food");
+  }
+
+  if (
+    text.includes("spa") ||
+    text.includes("relax") ||
+    text.includes("thermal")
+  ) {
+    tags.push("Relax");
+  }
+
+  if (
+    text.includes("hike") ||
+    text.includes("bike") ||
+    text.includes("adventure") ||
+    text.includes("sport") ||
+    text.includes("climb")
+  ) {
+    tags.push("Active");
+  }
+
+  if (tags.length === 0) {
+    tags.push("Explore");
+  }
+
+  return tags;
+}
+
+function scoreAttraction(item, preferences) {
+  var prefList = preferences || [];
+  var matched = 0;
+  var itemTags = item.tags || [];
+
+  prefList.forEach(function (pref) {
+    if (itemTags.indexOf(pref) !== -1) {
+      matched += 1;
+    }
+  });
+
+  return matched;
+}
+
+app.get("/api/recommendations", requireAuth, async (req, res) => {
+  var city = req.query.city || "Rome";
+
+  console.log("Requested city:", city);
+
+  var preferences = req.query.activities
+    ? req.query.activities.split(",").map(function (s) { return s.trim(); }).filter(Boolean)
+    : [];
+
+  try {
+    // Step 1: search location
+    var locationResponse = await axios.get(
+      "https://travel-advisor.p.rapidapi.com/locations/search",
+      {
+        params: {
+          query: city,
+          limit: "10",
+          offset: "0",
+          units: "km",
+          location_id: "1",
+          currency: "EUR",
+          sort: "relevance",
+          lang: "en_US"
+        },
+        headers: {
+          "X-RapidAPI-Key": process.env.RAPIDAPI_KEY,
+          "X-RapidAPI-Host": process.env.RAPIDAPI_HOST
+        }
+      }
+    );
+
+    var locationData = locationResponse.data && locationResponse.data.data
+      ? locationResponse.data.data
+      : [];
+
+    var geoResult = locationData.find(function (item) {
+      return item.result_type === "geos";
+    });
+
+    if (!geoResult || !geoResult.result_object || !geoResult.result_object.location_id) {
+      return res.json([]);
+    }
+
+    var locationId = geoResult.result_object.location_id;
+
+    // Step 2: get attractions for that location
+    var attractionsResponse = await axios.get(
+      "https://travel-advisor.p.rapidapi.com/attractions/list",
+      {
+        params: {
+          location_id: locationId,
+          currency: "EUR",
+          lang: "en_US",
+          lunit: "km",
+          sort: "recommended"
+        },
+        headers: {
+          "X-RapidAPI-Key": process.env.RAPIDAPI_KEY,
+          "X-RapidAPI-Host": process.env.RAPIDAPI_HOST
+        }
+      }
+    );
+
+    var attractionData = attractionsResponse.data && attractionsResponse.data.data
+      ? attractionsResponse.data.data
+      : [];
+
+    var normalized = attractionData
+      .filter(function (item) {
+        return item && item.name;
+      })
+      .map(function (item, index) {
+        var image =
+          item.photo &&
+          item.photo.images &&
+          item.photo.images.large &&
+          item.photo.images.large.url
+            ? item.photo.images.large.url
+            : "/images/fallback.jpg";
+
+        var ranking = item.ranking || "";
+        var subcategory =
+          item.subcategory && item.subcategory.length > 0
+            ? item.subcategory.map(function (x) { return x.name; }).join(" ")
+            : "";
+
+        var tags = inferTags(item.name, ranking, subcategory);
+
+        return {
+          id: item.location_id || index + 1,
+          name: item.name,
+          tags: tags,
+          description:
+            item.description ||
+            item.ranking ||
+            "A popular attraction worth exploring during your trip.",
+          image: image,
+          rating: item.rating || null,
+          location: city
+        };
+      });
+
+    var sorted = normalized
+      .map(function (item) {
+        return {
+          item: item,
+          score: scoreAttraction(item, preferences)
+        };
+      })
+      .sort(function (a, b) {
+        return b.score - a.score;
+      })
+      .map(function (entry) {
+        return entry.item;
+      });
+
+    res.json(sorted.slice(0, 15));
+  } catch (error) {
+    console.error(
+      "Travel Advisor API error:",
+      error.response ? error.response.data : error.message
+    );
+    res.status(500).json({ error: "Failed to fetch recommendations." });
+  }
+});
+
 
 // ── ERROR HANDLING ───────────────────────────────────────────────────────
 app.use((req, res) => {

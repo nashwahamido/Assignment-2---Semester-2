@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Activities - Atlasphere</title>
+  <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+  <%- include('../partials/navbar', { user: typeof user !== 'undefined' ? user : null }) %>
+
+  <div id="activities-root">
+    <p style="text-align:center;padding:40px;opacity:0.5;">Loading...</p>
+  </div>
+
+  <script type="module" src="/dist/activities.js"></script>
+</body>
+</html>

@@ -10,6 +10,7 @@ export default defineConfig({
     rollupOptions: {
       input: {
         groupTabs: path.resolve(__dirname, 'client/src/groupTabs.jsx'),
+        activities: path.resolve(__dirname, 'client/activities.jsx'),
       },
       output: {
         entryFileNames: '[name].js',

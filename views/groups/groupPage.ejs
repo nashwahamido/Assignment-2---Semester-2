@@ -22,6 +22,7 @@
      data-user-name="<%= typeof user !== 'undefined' && user ? user.username : 'Guest' %>"
      data-user-avatar="<%= typeof user !== 'undefined' && user && user.profilePictureUrl ? user.profilePictureUrl : '' %>"
      data-group-name="<%= typeof group !== 'undefined' && group ? group.name : '' %>"
+     data-group-destination="<%= typeof group !== 'undefined' && group ? group.destination : '' %>"
      data-group-photo="<%= typeof group !== 'undefined' && group && group.photo ? group.photo : '' %>"
      data-trip-days="<%= typeof tripDays !== 'undefined' ? tripDays : 7 %>">
   <p style="text-align:center;padding:40px;opacity:0.5;">Loading...</p>
