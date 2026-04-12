@@ -196,7 +196,7 @@
   text-align: left;
 
   display: -webkit-box;
-  -webkit-line-clamp: 4;     /* 👈 limits to 4 lines */
+  -webkit-line-clamp: 4;     /* limits to 4 lines */
   -webkit-box-orient: vertical;
   overflow: hidden;
 

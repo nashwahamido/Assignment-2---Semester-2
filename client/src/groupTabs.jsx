@@ -32,7 +32,13 @@ if (mount) {
     var activeTab = tabState[0];
     var setActiveTab = tabState[1];
 
-    var groupState = React.useState({ id: groupId, name: groupName || 'Rome', color: '#3B5F8A' });
+    var groupState = React.useState({
+  id: groupId,
+  name: groupName || 'Rome',
+  color: '#3B5F8A',
+  destination: groupDestination || '',
+  photo: groupPhoto || ''
+});
     var activeGroup = groupState[0];
     var setActiveGroup = groupState[1];
 
@@ -46,6 +52,7 @@ if (mount) {
       groupPhoto: activeGroup.photo !== undefined ? activeGroup.photo : groupPhoto
     };
 
+    console.log("ACTIVE GROUP:", activeGroup);
     return React.createElement('div', { className: 'gp-app' },
       React.createElement(TabSwitcher, { active: activeTab, onChange: setActiveTab }),
       React.createElement('div', { className: 'gp-content' },
@@ -56,17 +63,17 @@ if (mount) {
             activeGroup: activeGroup,
             onSelect: function(g) { setActiveGroup(g); }
           }),
-          React.createElement(ChatBox, chatProps)
+          React.createElement(ChatBox, Object.assign({ key: 'chat-' + (activeGroup.id || groupId) }, chatProps))
         ),
 
         // Discover tab — always mounted, hidden when not active
         React.createElement('div', { style: { display: activeTab === 'discover' ? 'contents' : 'none' } },
           React.createElement('div', { className: 'gp-tab-with-overlay' },
             React.createElement(VotingSystem, {
-            destination: groupDestination,
-            groupId: groupId
-          }),
-            React.createElement(ChatOverlay, chatProps)
+              destination: groupDestination,
+              groupId: groupId
+            }),
+            React.createElement(ChatOverlay, Object.assign({ key: 'overlay-' + (activeGroup.id || groupId) }, chatProps))
           )
         ),
 

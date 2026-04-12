@@ -839,7 +839,6 @@ function scoreAttraction(item, preferences) {
 
 app.get("/api/recommendations", requireAuth, async (req, res) => {
   var city = req.query.city || "Rome";
-
   console.log("Requested city:", city);
 
   var preferences = req.query.activities
