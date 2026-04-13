@@ -99,21 +99,28 @@ function Carousel({ children, active, setActive }) {
         <img src={icons.left} alt="" className="nav-icon nav-icon-white" />
       </button>
 
-      {React.Children.map(children, function (child, i) {
-        return (
-          <div
-            className="card-container"
-            style={{
-              "--active": i === active ? 1 : 0,
-              "--offset": (active - i) / 3,
-              "--direction": Math.sign(active - i),
-              "--abs-offset": Math.abs(active - i) / 3,
-              pointerEvents: i === active ? "auto" : "none",
-              opacity: Math.abs(active - i) > MAX_VISIBILITY ? "0" : "1",
-              display: Math.abs(active - i) > MAX_VISIBILITY ? "none" : "block",
-            }}
-            key={i}
-          >
+    {React.Children.map(children, function (child, i) {
+      var count = React.Children.count(children);
+      var rawOffset = active - i;
+
+      // Lets carousel loop
+      if (rawOffset > count / 2) rawOffset -= count;
+      if (rawOffset < -count / 2) rawOffset += count;
+
+      return (
+        <div
+          className="card-container"
+          style={{
+            "--active": i === active ? 1 : 0,
+            "--offset": rawOffset / 3,
+            "--direction": Math.sign(rawOffset),
+            "--abs-offset": Math.abs(rawOffset) / 3,
+            pointerEvents: i === active ? "auto" : "none",
+            opacity: Math.abs(rawOffset) > MAX_VISIBILITY ? "0" : "1",
+            display: Math.abs(rawOffset) > MAX_VISIBILITY ? "none" : "block",
+          }}
+          key={i}
+        >
             {child}
           </div>
         );

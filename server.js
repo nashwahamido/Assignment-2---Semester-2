@@ -852,11 +852,10 @@ app.get("/api/recommendations", requireAuth, async (req, res) => {
       {
         params: {
           query: city,
-          limit: "10",
+          limit: "50",
           offset: "0",
           units: "km",
           location_id: "1",
-          currency: "EUR",
           sort: "relevance",
           lang: "en_US"
         },
@@ -952,7 +951,7 @@ app.get("/api/recommendations", requireAuth, async (req, res) => {
         return entry.item;
       });
 
-    res.json(sorted.slice(0, 15));
+    res.json(sorted.slice(0, 50));
   } catch (error) {
     console.error(
       "Travel Advisor API error:",
