@@ -6,14 +6,22 @@
     </a>
   </div>
 
-  <div class="navbar-center">
-    <% if (typeof user !== 'undefined' && user) { %>
-      <a href="/" class="nav-link">Home</a>
-      <a href="/groups" class="nav-link">Groups</a>
-      <a href="/profile" class="nav-link">Profile</a>
-      <a href="/settings" class="nav-link">Settings</a>
-    <% } %>
-  </div>
+
+<div class="navbar-center">
+  <% if (typeof user !== 'undefined' && user) { %>
+    <a href="/" class="nav-link">Home</a>
+    <a href="/groups" class="nav-link">Groups</a>
+
+    <!-- newly added -->
+    <a href="/chat" class="nav-link chat-link">
+      Chat
+      <span id="chat-badge" class="chat-badge" style="display:none;">0</span>
+    </a>
+
+    <a href="/profile" class="nav-link">Profile</a>
+    <a href="/settings" class="nav-link">Settings</a>
+  <% } %>
+</div>
 
   <div class="navbar-right">
     <label class="theme-switch" aria-label="Toggle dark/light mode">
