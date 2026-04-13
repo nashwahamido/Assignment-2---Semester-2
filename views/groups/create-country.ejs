@@ -27,16 +27,13 @@
           <div class="destination-grid" id="countryGrid">
             <% if (typeof countries !== 'undefined') { %>
               <% countries.forEach(function(c, i) { %>
-                <div class="destination-card<%= i >= 6 ? ' hidden-card' : '' %>"
-                  data-value="<%= c.name %>"
-                  data-code="<%= c.code.toLowerCase() %>"
-                  data-index="<%= i %>">
+                <div class="destination-card<%= i >= 6 ? ' hidden-card' : '' %>" data-value="<%= c.name %>" data-index="<%= i %>">
                   <div class="card-flag">
-                    <img
-                      src="https://flagcdn.com/w80/<%= c.code.toLowerCase() %>.png"
-                      alt="<%= c.name %>"
-                      onerror="this.style.display='none'; this.nextSibling.style.display='block';">
-                    <span style="display:none; font-size:2rem;"><%= c.code %></span>
+                    <img src="https://flagcdn.com/w80/<%= c.code.toLowerCase() %>.png"
+                         alt="<%= c.flag %>"
+                         style="width:64px;height:auto;border-radius:4px;"
+                         onerror="this.style.display='none';this.nextElementSibling.style.display='block';">
+                    <span style="display:none;font-size:48px;"><%= c.flag %></span>
                   </div>
                   <span class="card-name"><%= c.name %></span>
                 </div>
@@ -62,9 +59,7 @@
   var nextBtn = document.getElementById('nextBtn');
   var loadMoreBtn = document.getElementById('loadMoreBtn');
   var searchInput = document.getElementById('countrySearch');
-  var isSearching = false;
 
-  // Selection
   cards.forEach(function(card) {
     card.addEventListener('click', function() {
       cards.forEach(function(c) { c.classList.remove('selected'); });
@@ -74,7 +69,6 @@
     });
   });
 
-  // Load more
   function updateVisibility() {
     var hiddenCount = 0;
     cards.forEach(function(card) {
@@ -94,12 +88,9 @@
     updateVisibility();
   });
 
-  // Search
   searchInput.addEventListener('input', function(e) {
     var q = e.target.value.toLowerCase().trim();
-    isSearching = q.length > 0;
-
-    if (isSearching) {
+    if (q.length > 0) {
       cards.forEach(function(card) {
         var name = card.querySelector('.card-name').textContent.toLowerCase();
         card.classList.toggle('hidden-card', !name.includes(q));
@@ -111,7 +102,6 @@
     }
   });
 
-  // Form validation
   document.getElementById('countryForm').addEventListener('submit', function(e) {
     if (!selectedInput.value) {
       e.preventDefault();
@@ -119,7 +109,6 @@
     }
   });
 
-  // Initial state
   updateVisibility();
 </script>
 </body>
