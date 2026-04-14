@@ -6,33 +6,88 @@
   <title>Choose Cities - Atlasphere</title>
   <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/css/styles.css">
+  <style>
+    .city-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 16px;
+      max-width: 700px;
+      margin: 0 auto;
+    }
+
+    .city-card {
+      background: rgba(255,255,255,0.1);
+      backdrop-filter: blur(8px);
+      border: 2px solid transparent;
+      border-radius: 16px;
+      padding: 20px 14px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .city-card:hover {
+      border-color: rgba(255,255,255,0.3);
+      background: rgba(255,255,255,0.15);
+    }
+
+    .city-card.selected {
+      border-color: #E8933A;
+      background: rgba(232,147,58,0.2);
+    }
+
+    .city-card__flag img {
+      width: 56px;
+      height: 38px;
+      object-fit: cover;
+      border-radius: 6px;
+      display: block;
+    }
+
+    .city-card__name {
+      font-size: 13px;
+      font-weight: 600;
+      color: #fff;
+      line-height: 1.3;
+    }
+
+    .city-card.selected .city-card__name {
+      color: #E8933A;
+    }
+  </style>
 </head>
 <body>
 <%- include('../partials/navbar', { user: typeof user !== 'undefined' ? user : null }) %>
-
 <div class="framed-page">
   <div class="framed-box">
     <div class="framed-box__bg"><img src="/images/setup-desert.jpg" alt="Desert landscape"></div>
     <div class="framed-box__content">
       <div class="group-creation-content">
-        <h1>Which cities in &ldquo;<%= typeof countryFlag !== 'undefined' ? countryFlag + ' ' : '' %><%= typeof countryName !== 'undefined' ? countryName : 'Country' %>&rdquo;?</h1>
+        <h1>Which cities in &ldquo;<%= typeof countryName !== 'undefined' ? countryName : 'Country' %>&rdquo;?</h1>
         <p>Select at least one city</p>
-
         <div class="search-input" style="margin: 24px auto;">
           <span class="search-icon">&#128269;</span>
           <input type="text" id="citySearch" placeholder="Search cities...">
         </div>
-
         <form action="/groups/create/days" method="get" id="cityForm">
           <input type="hidden" name="country" value="<%= typeof countryName !== 'undefined' ? countryName : '' %>">
           <input type="hidden" name="cities" id="selectedCities" value="">
-
-          <div class="destination-grid" id="cityGrid">
+          <div class="city-grid" id="cityGrid">
             <% if (typeof cities !== 'undefined' && cities.length > 0) { %>
               <% cities.forEach(function(city) { %>
-                <div class="destination-card" data-value="<%= city %>">
-                  <div class="card-flag" style="font-size: 28px;">&#127961;</div>
-                  <span class="card-name"><%= city %></span>
+                <% var code = typeof countryCode !== 'undefined' ? countryCode.toLowerCase() : ''; %>
+                <div class="city-card" data-value="<%= city %>">
+                  <div class="city-card__flag">
+                    <img
+                      src="https://flagcdn.com/w80/<%= code %>.png"
+                      alt="<%= city %>"
+                      onerror="this.style.display='none'">
+                  </div>
+                  <span class="city-card__name"><%= city %></span>
                 </div>
               <% }); %>
             <% } else { %>
@@ -41,7 +96,6 @@
               </p>
             <% } %>
           </div>
-
           <div class="setup-actions" style="margin-top: 32px;">
             <a href="/groups/create/country" class="btn btn-secondary" style="margin-right: 12px;">Back</a>
             <button type="submit" class="btn btn-primary" id="nextBtn" disabled>Next</button>
@@ -51,9 +105,8 @@
     </div>
   </div>
 </div>
-
 <script>
-  var cards = document.querySelectorAll('#cityGrid .destination-card');
+  var cards = document.querySelectorAll('#cityGrid .city-card');
   var selectedInput = document.getElementById('selectedCities');
   var nextBtn = document.getElementById('nextBtn');
 
@@ -78,7 +131,7 @@
   document.getElementById('citySearch').addEventListener('input', function(e) {
     var q = e.target.value.toLowerCase();
     cards.forEach(function(card) {
-      var name = card.querySelector('.card-name').textContent.toLowerCase();
+      var name = card.querySelector('.city-card__name').textContent.toLowerCase();
       card.style.display = name.includes(q) ? '' : 'none';
     });
   });
