@@ -123,7 +123,8 @@
               <% user.visitedCountries.forEach(function(country) { %>
                 <span
                   class="fi fi-<%= (country.code || country).toLowerCase() %>"
-                  title="<%= country.name || country %>">
+                  title="<%= country.name || country %>"
+                  style="display:inline-block; width:48px; height:36px; background-size:cover; border-radius:4px; box-shadow:0 0 0 1px rgba(0,0,0,0.1); margin:2px;">
                 </span>
               <% }) %>
             <% } else { %>
@@ -131,8 +132,13 @@
             <% } %>
           </div>
           <% if (user && user.visitedCities && user.visitedCities.length > 0) { %>
-            <div style="margin-top: 8px; font-size: 13px; color: var(--text-secondary, #888);">
-              <%= user.visitedCities.join(', ') %>
+            <div style="margin-top: 10px; display:flex; flex-wrap:wrap; gap:6px;">
+              <% user.visitedCities.forEach(function(city) { %>
+                <span style="background:#f0f4f8; color:#0B3856; font-size:12px; font-weight:500;
+                  padding:4px 10px; border-radius:20px; border:1px solid #dce6f0;">
+                  <%= city %>
+                </span>
+              <% }) %>
             </div>
           <% } %>
         </div>
@@ -144,7 +150,8 @@
               <% user.planningCountries.forEach(function(country) { %>
                 <span
                   class="fi fi-<%= (country.code || country).toLowerCase() %>"
-                  title="<%= country.name || country %>">
+                  title="<%= country.name || country %>"
+                  style="display:inline-block; width:48px; height:36px; background-size:cover; border-radius:4px; box-shadow:0 0 0 1px rgba(0,0,0,0.1); margin:2px;">
                 </span>
               <% }) %>
             <% } else { %>

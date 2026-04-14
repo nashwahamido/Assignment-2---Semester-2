@@ -27,6 +27,8 @@ app.use("/uploads", express.static(path.join(__dirname, "assets/uploads")));
 const sessionConfig = require("./config/session");
 app.use(session(sessionConfig));
 
+
+
 // ── DATABASE ─────────────────────────────────────────────────────────────
 const connection = mysql.createPool({
   host: process.env.DB_HOST,
@@ -532,16 +534,6 @@ app.post("/setup/save-visited", requireAuth, (req, res) => {
   var visitedCities = req.body["cities[]"] || [];
   if (typeof visitedCities === "string") visitedCities = [visitedCities];
 
-  var visitedFlags = [];
-  var visitedCountryNames = [];
-  var visitedCodes = (results[0].visitedCountries || "").split(",").filter(Boolean);
-visitedCodes.forEach(function(code) {
-  var country = countries.find(function(c) { return c.code.toLowerCase() === code.toLowerCase(); });
-  if (country) visitedFlags.push({ code: country.code, name: country.name });
-});
-
-  req.session.user.visitedCountries = visitedFlags;
-  req.session.user.visitedCountryNames = visitedCountryNames;
   req.session.user.visitedCities = visitedCities;
 
   connection.query(
@@ -557,8 +549,10 @@ visitedCodes.forEach(function(code) {
 });
 
 // ── PROFILE ──────────────────────────────────────────────────────────────
+
 app.get("/profile", requireAuth, (req, res) => {
   var userId = req.session.user.id;
+  console.log('Profile userId:', userId);
 
   connection.query(
     "SELECT profilePictureUrl, visitedCountries, visitedCities FROM tbl_users WHERE IDuser = ?",
@@ -567,7 +561,6 @@ app.get("/profile", requireAuth, (req, res) => {
       var image = null;
       var visitedFlags = [];
       var visitedCityList = [];
-      var planningFlags = [];
 
       if (err) {
         console.error("Profile query error:", err.message);
@@ -595,9 +588,8 @@ app.get("/profile", requireAuth, (req, res) => {
         visitedCityList = req.session.user.visitedCities;
       }
 
-      // Count groups and get planning flags from DB
       connection.query(
-        "SELECT g.flag FROM tbl_groups g INNER JOIN tbl_group_members gm ON g.id = gm.groupId WHERE gm.userId = ?",
+        "SELECT g.* FROM tbl_groups g INNER JOIN tbl_group_members gm ON g.id = gm.groupId WHERE gm.userId = ?",
         [userId],
         function (grpErr, grpRows) {
           var groupCount = 0;
@@ -606,14 +598,20 @@ app.get("/profile", requireAuth, (req, res) => {
           if (!grpErr && grpRows) {
             groupCount = grpRows.length;
             grpRows.forEach(function (g) {
-              if (g.flag && planningFlags.indexOf(g.flag) === -1) {
-                planningFlags.push(g.flag);
+              console.log('Group:', g.name, '| destination:', g.destination);
+              var destination = g.name || g.destination || '';
+              var country = countries.find(function(c) {
+                return c.name.toLowerCase() === destination.toLowerCase();
+              });
+              if (country) {
+                var alreadyAdded = planningFlags.some(function(f) { return f.code === country.code; });
+                if (!alreadyAdded) {
+                  planningFlags.push({ code: country.code, name: country.name });
+                }
               }
             });
           }
 
-          console.log('visitedFlags before render:', visitedFlags);
-          console.log('visitedCodes from DB:', visitedCodes);
           var user = req.session.user;
           user.visitedCountries = visitedFlags;
           user.visitedCities = visitedCityList;
@@ -623,78 +621,6 @@ app.get("/profile", requireAuth, (req, res) => {
           res.render("profile", { user: user, image: image });
         }
       );
-    }
-  );
-});
-
-app.post("/profile/upload", requireAuth, function (req, res) {
-  if (!req.files || !req.files.profilePicture) {
-    return res.redirect("/profile");
-  }
-
-  var file = req.files.profilePicture;
-  var uploadDir = path.join(__dirname, "assets/uploads");
-
-  if (!fs.existsSync(uploadDir)) {
-    fs.mkdirSync(uploadDir, { recursive: true });
-  }
-
-  var timestamp = new Date().toISOString().replace(/[-:T]/g, "").slice(0, 15);
-  var safeName = file.name.replace(/[^a-zA-Z0-9.\-_]/g, "_");
-  var fileName = timestamp + "_" + safeName;
-  var filePath = path.join(uploadDir, fileName);
-
-  file.mv(filePath, function (err) {
-    if (err) {
-      console.error("File upload error:", err);
-      return res.redirect("/profile");
-    }
-
-    var dbPath = "/uploads/" + fileName;
-
-    connection.query(
-      "UPDATE tbl_users SET profilePictureUrl = ?, profilePictureAlt = ? WHERE IDuser = ?",
-      [dbPath, "Profile picture", req.session.user.id],
-      function (dbErr) {
-        if (dbErr) {
-          console.error("DB update error:", dbErr);
-        } else {
-          req.session.user.profilePictureUrl = dbPath;
-          console.log("Profile picture updated:", dbPath);
-        }
-
-        req.session.save(function () {
-          res.redirect("/profile");
-        });
-      }
-    );
-  });
-});
-
-app.get("/profile/confirmed", requireAuth, (req, res) => {
-  res.render("profile/confirmed", { user: req.session.user || null });
-});
-
-app.get("/upload", requireAuth, (req, res) => {
-  const userId = req.session.user.id;
-
-  connection.query(
-    "SELECT profilePictureUrl FROM tbl_users WHERE IDuser = ?",
-    [userId],
-    (err, results) => {
-      if (err) {
-        console.error(err);
-        return res.status(500).send("Database error");
-      }
-
-      const userData = results[0];
-
-      res.render("profile", {
-        user: req.session.user,
-        message: null,
-        type: null,
-        image: userData?.profilePictureUrl || null,
-      });
     }
   );
 });
@@ -743,6 +669,7 @@ app.get("/groups/create/activities", requireAuth, (req, res) => {
     groupId: req.query.groupId || ''
   });
 });
+
 
 // ── GROUPS / USERS ROUTES ────────────────────────────────────────────────
 app.use("/groups", require("./routes/groups"));
@@ -1053,3 +980,4 @@ server.listen(PORT, function() {
 });
 
 module.exports = app;
+
