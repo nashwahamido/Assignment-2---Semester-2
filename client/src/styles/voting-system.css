@@ -346,3 +346,13 @@
     height: 22px;
   }
 }
+.gp-tab-with-overlay {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+  position: relative;
+}
+
+.gp-tab-with-overlay .voting-page {
+  flex: 1;
+}
