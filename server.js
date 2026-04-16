@@ -40,6 +40,7 @@ const connection = mysql.createPool({
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0,
+  timezone: '+00:00',
 });
 
 connection.getConnection((err, conn) => {
@@ -939,6 +940,7 @@ app.get("/api/recommendations", requireAuth, async (req, res) => {
 
 app.post("/api/votes", requireAuth, (req, res) => {
   var userId = req.session.user.id;
+  var userName = req.session.user.username || 'Someone';
   var { groupId, activityId, activityName, activityImage, activityDesc, activityTags, vote } = req.body;
   console.log("Vote POST:", { groupId, activityId, activityName: activityName ? activityName.substring(0, 30) : '', vote, userId });
   if (!groupId || !activityId || !vote) return res.status(400).json({ error: "Missing fields" });
@@ -948,6 +950,26 @@ app.post("/api/votes", requireAuth, (req, res) => {
     [groupId, userId, activityId, activityName || "", activityImage || "", activityDesc || "", tagsStr, vote, vote, activityName || "", activityImage || "", activityDesc || "", tagsStr],
     function(err) {
       if (err) { console.error("Vote save error:", err.message); return res.status(500).json({ error: "Failed" }); }
+
+      // Create notifications for other group members
+      if (vote !== 'downvote') {
+        var voteLabel = vote === 'upvote' ? 'upvoted' : 'bookmarked';
+        connection.query("SELECT g.name as groupName, gm.userId FROM tbl_group_members gm JOIN tbl_groups g ON g.id = gm.groupId WHERE gm.groupId = ? AND gm.userId != ?",
+          [groupId, userId],
+          function(nErr, members) {
+            if (nErr || !members || members.length === 0) return;
+            var groupName = members[0].groupName;
+            var msg = userName + ' ' + voteLabel + ' "' + (activityName || 'an activity').substring(0, 60) + '"';
+            var values = members.map(function(m) { return [m.userId, groupId, groupName, msg, 'vote']; });
+            connection.query("INSERT INTO tbl_notifications (userId, groupId, groupName, message, type) VALUES ?", [values], function(iErr) {
+              if (iErr) console.error("Notification insert error:", iErr.message);
+              // Emit socket notification to group
+              io.to("group-" + groupId).emit("new-notification", { groupId: groupId, groupName: groupName, message: msg });
+            });
+          }
+        );
+      }
+
       res.json({ success: true });
     }
   );
@@ -1078,6 +1100,80 @@ app.get("/api/itinerary/dates", requireAuth, (req, res) => {
   );
 });
 
+// ── NOTIFICATIONS API ────────────────────────────────────────────────────
+
+// Get notifications for current user
+app.get("/api/notifications", requireAuth, (req, res) => {
+  var userId = req.session.user.id;
+  connection.query(
+    "SELECT id, groupId, groupName, message, type, isRead, createdAt FROM tbl_notifications WHERE userId = ? ORDER BY createdAt DESC LIMIT 50",
+    [userId],
+    function(err, rows) {
+      if (err) { console.error("Notif load error:", err.message); return res.json([]); }
+      // Convert timestamps to ISO and group notifications
+      var notifications = (rows || []).map(function(n) {
+        return { id: n.id, groupId: n.groupId, groupName: n.groupName, message: n.message, type: n.type, isRead: n.isRead, createdAt: n.createdAt ? new Date(n.createdAt).toISOString() : null };
+      });
+      var unreadByGroup = {};
+      notifications.forEach(function(n) {
+        if (!n.isRead) {
+          if (!unreadByGroup[n.groupId]) unreadByGroup[n.groupId] = { count: 0, groupName: n.groupName, groupId: n.groupId };
+          unreadByGroup[n.groupId].count++;
+        }
+      });
+      var summarizedGroups = {};
+      var results = [];
+      notifications.forEach(function(n) {
+        if (!n.isRead && unreadByGroup[n.groupId] && unreadByGroup[n.groupId].count >= 4 && !summarizedGroups[n.groupId]) {
+          summarizedGroups[n.groupId] = true;
+          results.push({ id: n.id, groupId: n.groupId, groupName: n.groupName, message: n.groupName + ' has ' + unreadByGroup[n.groupId].count + ' new votes', type: 'vote-summary', isRead: 0, createdAt: n.createdAt });
+        } else if (!n.isRead && unreadByGroup[n.groupId] && unreadByGroup[n.groupId].count >= 4) {
+          // Skip individual ones for summarized groups
+        } else {
+          results.push(n);
+        }
+      });
+      res.json(results);
+    }
+  );
+});
+
+// Get unread count
+app.get("/api/notifications/count", requireAuth, (req, res) => {
+  var userId = req.session.user.id;
+  connection.query(
+    "SELECT COUNT(*) as cnt FROM tbl_notifications WHERE userId = ? AND isRead = 0",
+    [userId],
+    function(err, rows) {
+      res.json({ count: (!err && rows && rows[0]) ? rows[0].cnt : 0 });
+    }
+  );
+});
+
+// Mark all as read
+app.post("/api/notifications/read", requireAuth, (req, res) => {
+  var userId = req.session.user.id;
+  connection.query("UPDATE tbl_notifications SET isRead = 1 WHERE userId = ?", [userId], function(err) {
+    res.json({ success: !err });
+  });
+});
+
+// Get last active time for a group
+app.get("/api/groups/last-active", requireAuth, (req, res) => {
+  var groupId = req.query.groupId;
+  if (!groupId) return res.json({ lastActive: null });
+  connection.query(
+    "SELECT createdAt, userName FROM tbl_chat_messages WHERE groupId = ? ORDER BY createdAt DESC LIMIT 1",
+    [groupId],
+    function(err, rows) {
+      if (!err && rows && rows.length > 0) {
+        return res.json({ lastActive: new Date(rows[0].createdAt).toISOString(), userName: rows[0].userName });
+      }
+      res.json({ lastActive: null });
+    }
+  );
+});
+
 // ── ERROR HANDLING ───────────────────────────────────────────────────────
 app.use((req, res) => {
   res.status(404).render("error", {
@@ -1102,6 +1198,7 @@ const { Server } = require("socket.io");
 
 const server = http.createServer(app);
 const io = new Server(server);
+var roomMembers = {}; // { "group-123": { "userId1": true, ... } }
 
 io.on("connection", function(socket) {
   console.log("Socket connected:", socket.id);
@@ -1126,14 +1223,19 @@ io.on("connection", function(socket) {
       }
     );
 
-    socket.to(room).emit("user-joined", { userName: data.userName });
-    console.log(data.userName + " joined room " + room);
+    // Only broadcast "user joined" if they're not already in the room
+    if (!roomMembers[room]) roomMembers[room] = {};
+    if (!roomMembers[room][data.userId]) {
+      roomMembers[room][data.userId] = true;
+      socket.to(room).emit("user-joined", { userName: data.userName });
+      console.log(data.userName + " joined room " + room);
+    }
   });
 
   socket.on("send-message", function(data) {
     var room = "group-" + data.groupId;
     var msgId = Date.now() + "-" + Math.random().toString(36).substr(2, 5);
-    var timeStr = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    var timeStr = new Date().toISOString();
     var msg = {
       id: msgId,
       userId: data.userId,
@@ -1158,6 +1260,25 @@ io.on("connection", function(socket) {
 
   socket.on("disconnect", function() {
     console.log("Socket disconnected:", socket.id);
+    if (socket.userData) {
+      var room = "group-" + socket.userData.groupId;
+      if (roomMembers[room] && roomMembers[room][socket.userData.userId]) {
+        // Check if user has any other sockets still in the room
+        var room_sockets = io.sockets.adapter.rooms.get(room);
+        var stillConnected = false;
+        if (room_sockets) {
+          room_sockets.forEach(function(sid) {
+            var s = io.sockets.sockets.get(sid);
+            if (s && s.userData && s.userData.userId === socket.userData.userId && s.id !== socket.id) {
+              stillConnected = true;
+            }
+          });
+        }
+        if (!stillConnected) {
+          delete roomMembers[room][socket.userData.userId];
+        }
+      }
+    }
   });
 });
 
