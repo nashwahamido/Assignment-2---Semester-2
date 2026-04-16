@@ -386,12 +386,6 @@ const ItineraryBuilder = ({ tripId = null, groupId = null, onSave = null, tripDa
               <p style={{ fontSize: '12px', opacity: 0.7 }}>Upvoted and saved activities from recommendations will appear here</p>
             </div>
           )}
-          {filtered.length === 0 && (
-            <div style={{ textAlign: 'center', padding: '32px 16px', color: 'var(--ib-text-muted, #888)', fontSize: '13px' }}>
-              <p style={{ marginBottom: '8px' }}>No activities yet</p>
-              <p style={{ fontSize: '12px', opacity: 0.7 }}>Upvoted and saved activities from recommendations will appear here</p>
-            </div>
-          )}
           {filtered.map(a => (
             <div key={a.id} className="ib-act" draggable onDragStart={e => panelDragStart(e, a)}>
               <div className="ib-act__icon" style={{ backgroundColor: a.color, overflow: 'hidden' }}>
