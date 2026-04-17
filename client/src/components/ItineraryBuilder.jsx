@@ -143,63 +143,33 @@ const ItineraryBuilder = ({ tripId = null, groupId = null, onSave = null, tripDa
     else setCalMonth(calMonth + 1);
   };
 
- const clickDay = (d) => {
-  if (pickingEnd && rangeStart !== null) {
-    if (d <= rangeStart) {
-      setPickingEnd(false);
-      setRangeStart(d);
-      setRangeEnd(rangeEnd);
-      setActiveDay(0);
-      return;
-    }
-    const newLength = d - rangeStart + 1;
-    setAllBlocks(prev => {
-      var trimmed = {};
-      Object.keys(prev).forEach(idx => {
-        if (parseInt(idx) < newLength) trimmed[idx] = prev[idx];
-      });
-      return trimmed;
-    });
-    setRangeEnd(d);
-    setPickingEnd(false);
-    return;
-  }
-
-  const end = Math.min(d + tripDays - 1, daysInMonth);
-  setRangeStart(d);
-  setRangeEnd(end);
-  setActiveDay(0);
-};
-
-      const hasActivities = Object.values(allBlocks).some(day => Object.keys(day).length > 0);
-      if (hasActivities) {
-        const confirmed = window.confirm('Changing the end date will clear planned activities outside the new range. Continue?');
-        if (!confirmed) { setPickingEnd(false); return; }
-        const newLength = d - rangeStart + 1;
-        setAllBlocks(prev => {
-          var trimmed = {};
-          Object.keys(prev).forEach(idx => {
-            if (parseInt(idx) < newLength) trimmed[idx] = prev[idx];
-          });
-          return trimmed;
-        });
+  const clickDay = (d) => {
+    if (pickingEnd && rangeStart !== null) {
+      if (d <= rangeStart) {
+        setPickingEnd(false);
+        setRangeStart(d);
+        setRangeEnd(rangeEnd);
+        setActiveDay(0);
+        return;
       }
+      const newLength = d - rangeStart + 1;
+      setAllBlocks(prev => {
+        var trimmed = {};
+        Object.keys(prev).forEach(idx => {
+          if (parseInt(idx) < newLength) trimmed[idx] = prev[idx];
+        });
+        return trimmed;
+      });
       setRangeEnd(d);
       setPickingEnd(false);
       return;
     }
 
-    const hasActivities = Object.values(allBlocks).some(day => Object.keys(day).length > 0);
-    if (rangeStart !== null && hasActivities) {
-      const confirmed = window.confirm('Changing your start date will clear all your planned activities. Are you sure?');
-      if (!confirmed) return;
-    }
     const end = Math.min(d + tripDays - 1, daysInMonth);
     setRangeStart(d);
     setRangeEnd(end);
     setActiveDay(0);
-    setAllBlocks({});
-
+  };
 
   const daysWithBlocks = useMemo(() => {
     var result = {};
