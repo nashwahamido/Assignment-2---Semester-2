@@ -1043,6 +1043,12 @@ button, input, select, textarea { font-family: inherit; font-size: inherit; }
   height: 32px;
   width: auto;
   display: block;
-  color: #3B5068;
-  filter: invert(27%) sepia(13%) saturate(800%) hue-rotate(175deg);
+}
+
+[data-theme="dark"] .navbar-logo {
+  filter: brightness(0) invert(1);
+}
+
+[data-theme="light"] .navbar-logo {
+  filter: brightness(0) saturate(100%) invert(28%) sepia(16%) saturate(600%) hue-rotate(172deg) brightness(88%);
 }
