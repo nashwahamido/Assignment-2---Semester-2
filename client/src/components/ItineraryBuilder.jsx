@@ -75,9 +75,11 @@ const ItineraryBuilder = ({ tripId = null, groupId = null, onSave = null, tripDa
   }, [groupId, tripId, isActive]);
 
   // Build week days dynamically from selected range
+  const actualDays = (rangeStart !== null && rangeEnd !== null) ? rangeEnd - rangeStart + 1 : tripDays;
   const weekDays = useMemo(() => {
-    if (!rangeStart) return [];
-    return Array.from({ length: tripDays }, (_, i) => {
+      if (!rangeStart) return [];
+      return Array.from({ length: actualDays }, (_, i) => {
+        
       const date = new Date(calYear, calMonth, rangeStart + i);
       return {
         index: i,
