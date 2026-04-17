@@ -78,7 +78,7 @@
                 data-name="<%= country.name.toLowerCase() %>">
                 <input type="checkbox" name="countries[]" value="<%= country.code %>"
                   <%= isChecked ? 'checked' : '' %>
-                  onchange="this.closest('.location-card').classList.toggle('location-card--checked', this.checked); filterCities(document.getElementById('citySearch').value);">
+                  onchange="this.closest('.location-card').classList.toggle('location-card--checked', this.checked);">
                 <span class="location-flag">
                   <img src="https://flagcdn.com/w80/<%= country.code.toLowerCase() %>.png"
                     alt="<%= country.name %>"
@@ -244,20 +244,14 @@
     }
   }
 
-  function initLocationGrids() {
-    var checkedCountries = [];
-    document.querySelectorAll('#countryGrid input:checked').forEach(function(input) {
-      checkedCountries.push(input.value);
-    });
-    document.querySelectorAll('#countryGrid .location-card').forEach(function(card) {
-      card.style.display = card.querySelector('input').checked ? '' : 'none';
-    });
-    document.querySelectorAll('#cityGrid .location-card').forEach(function(card) {
-      var isChecked = card.querySelector('input').checked;
-      var inCheckedCountry = checkedCountries.includes(card.dataset.country);
-      card.style.display = (isChecked || inCheckedCountry) ? '' : 'none';
-    });
-  }
+function initLocationGrids() {
+  document.querySelectorAll('#countryGrid .location-card').forEach(function(card) {
+    card.style.display = card.querySelector('input').checked ? '' : 'none';
+  });
+  document.querySelectorAll('#cityGrid .location-card').forEach(function(card) {
+    card.style.display = card.querySelector('input').checked ? '' : 'none';
+  });
+}
 
   function filterCountries(query) {
     var q = query.toLowerCase();
@@ -270,22 +264,16 @@
     });
   }
 
-  function filterCities(query) {
-    var q = query.toLowerCase();
-    var checkedCountries = [];
-    document.querySelectorAll('#countryGrid input:checked').forEach(function(input) {
-      checkedCountries.push(input.value);
-    });
-    document.querySelectorAll('#cityGrid .location-card').forEach(function(card) {
-      var inCheckedCountry = checkedCountries.includes(card.dataset.country);
-      var isChecked = card.querySelector('input').checked;
-      if (q.length < 2) {
-        card.style.display = (inCheckedCountry || isChecked) ? '' : 'none';
-      } else {
-        card.style.display = (inCheckedCountry && card.dataset.name.includes(q)) ? '' : 'none';
-      }
-    });
-  }
+function filterCities(query) {
+  var q = query.toLowerCase();
+  document.querySelectorAll('#cityGrid .location-card').forEach(function(card) {
+    if (q.length < 2) {
+      card.style.display = card.querySelector('input').checked ? '' : 'none';
+    } else {
+      card.style.display = card.dataset.name.includes(q) ? '' : 'none';
+    }
+  });
+}
 
   function filterGroups(query) {
     document.querySelectorAll('.group-row').forEach(function(row) {
