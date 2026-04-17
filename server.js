@@ -305,7 +305,8 @@ app.post("/auth/register", validationRegisterRules, async (req, res) => {
   console.log("New registration:", req.body);
 
   try {
-    const { username, useremail, userphone, gender, psw } = req.body;
+    const { username, useremail, userphone, gender, psw, phoneCode } = req.body;
+    const fullPhone = (phoneCode || '+353') + (userphone || '').replace(/^0+/, '');
 
     connection.query(
       "SELECT IDuser FROM tbl_users WHERE email = ? LIMIT 1",
@@ -333,7 +334,7 @@ app.post("/auth/register", validationRegisterRules, async (req, res) => {
         const insertValues = [
           username,
           useremail,
-          userphone || "",
+          fullPhone,
           hashedPassword,
           genderId,
           Number(code),

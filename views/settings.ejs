@@ -41,8 +41,22 @@
           <div class="form-group">
             <label for="phone">Phone</label>
             <div class="phone-row">
-              <input type="text" id="phoneCode" name="phoneCode" placeholder="+353" class="phone-code">
-              <input type="tel" id="phone" name="phone" value="<%= user ? (user.phonenumber || '') : '' %>">
+              <% var storedPhone = user ? (user.phonenumber || '') : '';
+                 var codes = ['+355','+387','+380','+385','+381','+353','+44','+1','+49','+33','+34','+39','+31','+32','+41','+43','+45','+46','+47','+48','+351','+358','+36','+30','+90','+91','+86','+81','+82','+61','+64','+55','+52','+27','+234','+254','+20','+971','+966','+7','+40'];
+                 var flags = {'+355':'🇦🇱','+387':'🇧🇦','+380':'🇺🇦','+385':'🇭🇷','+381':'🇷🇸','+353':'🇮🇪','+44':'🇬🇧','+1':'🇺🇸','+49':'🇩🇪','+33':'🇫🇷','+34':'🇪🇸','+39':'🇮🇹','+31':'🇳🇱','+32':'🇧🇪','+41':'🇨🇭','+43':'🇦🇹','+45':'🇩🇰','+46':'🇸🇪','+47':'🇳🇴','+48':'🇵🇱','+351':'🇵🇹','+358':'🇫🇮','+36':'🇭🇺','+30':'🇬🇷','+90':'🇹🇷','+91':'🇮🇳','+86':'🇨🇳','+81':'🇯🇵','+82':'🇰🇷','+61':'🇦🇺','+64':'🇳🇿','+55':'🇧🇷','+52':'🇲🇽','+27':'🇿🇦','+234':'🇳🇬','+254':'🇰🇪','+20':'🇪🇬','+971':'🇦🇪','+966':'🇸🇦','+7':'🇷🇺','+40':'🇷🇴'};
+                 var detectedCode = '+353';
+                 var phoneNum = storedPhone;
+                 codes.sort(function(a,b){ return b.length - a.length; });
+                 for (var i = 0; i < codes.length; i++) {
+                   if (storedPhone.startsWith(codes[i])) { detectedCode = codes[i]; phoneNum = storedPhone.slice(codes[i].length); break; }
+                 }
+              %>
+              <select name="phoneCode" class="phone-code" id="settingsPhoneCode">
+                <% ['+353','+44','+1','+49','+33','+34','+39','+31','+32','+41','+43','+45','+46','+47','+48','+351','+358','+36','+30','+90','+91','+86','+81','+82','+61','+64','+55','+52','+27','+234','+254','+20','+971','+966','+7','+380','+40','+385','+381','+355','+387'].forEach(function(c) { %>
+                  <option value="<%= c %>" <%= c === detectedCode ? 'selected' : '' %>><%= flags[c] || '' %> <%= c %></option>
+                <% }); %>
+              </select>
+              <input type="tel" id="phone" name="phone" value="<%= phoneNum %>">
             </div>
           </div>
           <div class="form-group">
@@ -62,7 +76,7 @@
 
       <!-- Modify visited locations -->
       <div id="visitedLocations" class="settings-panel">
-       <form id="locationsForm">
+        <form action="/users/update-locations" method="post" id="locationsForm">
 
           <h3>Change Visited Countries:</h3>
           <div class="search-bar">
@@ -119,7 +133,7 @@
           </div>
 
           <div class="form-actions" style="margin-top: 24px;">
-            <button type="button" class="btn-save" onclick="saveLocations()">Save</button>
+            <button type="submit" class="btn-save">Save</button>
           </div>
         </form>
       </div>
@@ -380,21 +394,6 @@ function filterCities(query) {
   })();
 
   initLocationGrids();
-
- function saveLocations() {
-  var form = document.getElementById('locationsForm');
-  var data = new URLSearchParams(new FormData(form));
-  fetch('/users/update-locations', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: data.toString()
-  }).then(function() {
-    document.getElementById('countrySearch').value = '';
-    document.getElementById('citySearch').value = '';
-    initLocationGrids();
-    showTab({ target: document.querySelectorAll('.settings-tab')[1] }, 'visitedLocations');
-  });
-} 
 </script>
 
 </body>
