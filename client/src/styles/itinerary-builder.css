@@ -193,3 +193,9 @@
   border-radius: 4px;
   cursor: pointer;
 }
+/* Itinerary scrollbars */
+.ib-schedule::-webkit-scrollbar, .ib-panel__list::-webkit-scrollbar { width: 6px; }
+.ib-schedule::-webkit-scrollbar-track, .ib-panel__list::-webkit-scrollbar-track { background: transparent; }
+.ib-schedule::-webkit-scrollbar-thumb, .ib-panel__list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 3px; }
+.ib-schedule::-webkit-scrollbar-thumb:hover, .ib-panel__list::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.25); }
+.ib-schedule, .ib-panel__list { scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.15) transparent; }

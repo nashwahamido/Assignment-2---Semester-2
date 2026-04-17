@@ -47,3 +47,9 @@
 /* Message timestamps */
 .cb__time { font-size: 10px; color: var(--text-secondary, #888); padding: 2px 4px 0; display: block; opacity: 0.7; }
 .cb__time--self { text-align: right; }
+/* Chat scrollbar */
+.cb__messages::-webkit-scrollbar { width: 6px; }
+.cb__messages::-webkit-scrollbar-track { background: transparent; }
+.cb__messages::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 3px; }
+.cb__messages::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.25); }
+.cb__messages { scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.15) transparent; }

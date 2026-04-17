@@ -8,8 +8,19 @@
   <link rel="stylesheet" href="/css/styles.css">
   <link rel="stylesheet" href="/dist/groupTabs.css">
   <style>
+    html { overflow: hidden; height: 100%; }
+    body { margin: 0; padding: 0; overflow: hidden; height: 100%; }
     .gp-app { display: flex; flex-direction: column; height: calc(100vh - 60px); overflow: hidden; }
     .gp-content { flex: 1; display: flex; overflow: hidden; }
+    .gp-tab-with-overlay { overflow-y: auto; flex: 1; }
+    /* Only the discover tab should scroll at the page level */
+    .gp-tab-with-overlay .ib-layout { overflow: hidden; }
+    /* Hide the main scrollbar on gp-tab-with-overlay, use styled one */
+    .gp-tab-with-overlay::-webkit-scrollbar { width: 6px; }
+    .gp-tab-with-overlay::-webkit-scrollbar-track { background: transparent; }
+    .gp-tab-with-overlay::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 3px; }
+    .gp-tab-with-overlay::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.25); }
+    .gp-tab-with-overlay { scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.15) transparent; }
   </style>
 </head>
 <body>

@@ -19,3 +19,9 @@
 .sb__item-time { font-size: 11px; color: var(--ib-text-muted, #6b7280); flex-shrink: 0; }
 
 @media (max-width: 768px) { .sb { width: 100%; height: auto; max-height: 200px; border-right: none; border-bottom: 1px solid var(--ib-divider, rgba(0,0,0,0.06)); } }
+/* Sidebar scrollbar */
+.sb__list::-webkit-scrollbar { width: 6px; }
+.sb__list::-webkit-scrollbar-track { background: transparent; }
+.sb__list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 3px; }
+.sb__list::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.25); }
+.sb__list { scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.15) transparent; }
