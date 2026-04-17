@@ -119,7 +119,7 @@
           </div>
 
           <div class="form-actions" style="margin-top: 24px;">
-            <button type="submit" class="btn-save">Save</button>
+            <button type="button" class="btn-save" onclick="saveLocations()">Save</button>
           </div>
         </form>
       </div>
@@ -380,6 +380,19 @@ function filterCities(query) {
   })();
 
   initLocationGrids();
+
+  function saveLocations() {
+  var form = document.getElementById('locationsForm');
+  var data = new URLSearchParams(new FormData(form));
+  fetch('/users/update-locations', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: data.toString()
+  }).then(function() {
+    showTab({ target: document.querySelectorAll('.settings-tab')[1] }, 'visitedLocations');
+  });
+}
+  
 </script>
 
 </body>
