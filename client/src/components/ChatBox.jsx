@@ -17,12 +17,23 @@ var ChatBox = function(props) {
   var inputState = useState('');
   var input = inputState[0];
   var setInput = inputState[1];
+  var lastActiveState = useState(null);
+  var lastActive = lastActiveState[0];
+  var setLastActive = lastActiveState[1];
   var socketRef = useRef(null);
   var bottomRef = useRef(null);
   var connectedRef = useRef(false);
 
   useEffect(function() {
     if (connectedRef.current) return;
+
+    // Fetch last active time
+    if (!compact) {
+      fetch('/api/groups/last-active?groupId=' + groupId)
+        .then(function(r) { return r.json(); })
+        .then(function(data) { if (data.lastActive) setLastActive(data.lastActive); })
+        .catch(function() {});
+    }
 
     function initSocket() {
       if (!window.io) return;
@@ -38,6 +49,7 @@ var ChatBox = function(props) {
 
       socket.on('new-message', function(msg) {
         setMessages(function(prev) { return prev.concat([msg]); });
+        setLastActive(new Date().toISOString());
       });
 
       socket.on('user-joined', function(data) {
@@ -99,6 +111,29 @@ var ChatBox = function(props) {
     return React.createElement('div', { className: cls, style: { backgroundColor: fallbackColor } });
   }
 
+  function formatMsgTime(t) {
+    if (!t) return '';
+    // If it's already short (like "09:45"), return as-is
+    if (t.length <= 5) return t;
+    // If ISO string, convert to local time
+    try {
+      var d = new Date(t);
+      if (!isNaN(d.getTime())) {
+        return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      }
+    } catch(e) {}
+    return t;
+  }
+
+  function chatTimeAgo(isoStr) {
+    if (!isoStr) return 'Online';
+    var diff = (Date.now() - new Date(isoStr).getTime()) / 1000;
+    if (diff < 60) return 'Active just now';
+    if (diff < 3600) return 'Active ' + Math.floor(diff / 60) + 'm ago';
+    if (diff < 86400) return 'Active ' + Math.floor(diff / 3600) + 'h ago';
+    return 'Active ' + Math.floor(diff / 86400) + 'd ago';
+  }
+
   var headerIcon;
   if (groupPhoto) {
     headerIcon = React.createElement('div', { className: 'cb__header-icon', style: { overflow: 'hidden' } },
@@ -108,6 +143,8 @@ var ChatBox = function(props) {
     headerIcon = React.createElement('div', { className: 'cb__header-icon', style: { backgroundColor: groupColor } });
   }
 
+  var statusText = messages.length > 0 ? 'Online' : (lastActive ? chatTimeAgo(lastActive) : 'Online');
+
   return React.createElement('div', { className: compact ? 'cb cb--compact' : 'cb' },
     !compact && React.createElement('div', { className: 'cb__header' },
       headerIcon,
@@ -115,7 +152,7 @@ var ChatBox = function(props) {
         React.createElement('div', { className: 'cb__header-name' }, groupName),
         React.createElement('div', { className: 'cb__header-status' },
           React.createElement('span', { className: 'cb__status-dot' }),
-          'Online'
+          statusText
         )
       )
     ),
@@ -126,11 +163,43 @@ var ChatBox = function(props) {
         }
         var isSelf = String(m.userId) === String(userId);
         var avatarUrl = isSelf ? userAvatar : (m.userAvatar || '');
+
+        // Detect shared activity format: [[SHARE:imageUrl|name|description]]
+        var shareMatch = m.text && m.text.match(/^\[\[SHARE:([^|]*)\|([^|]+)\|([\s\S]*)\]\]$/);
+        var bubbleContent;
+        if (shareMatch) {
+          var shareImg = shareMatch[1];
+          var shareName = shareMatch[2];
+          var shareDesc = shareMatch[3];
+          bubbleContent = React.createElement('div', {
+            className: 'cb__share-card',
+            onClick: function() {
+              // Switch to discover tab if callable handler exists
+              if (typeof window.atlasphereSwitchTab === 'function') {
+                window.atlasphereSwitchTab('discover');
+              }
+            },
+            title: 'Click to view in recommendations'
+          },
+            shareImg ? React.createElement('img', { src: shareImg, alt: shareName, className: 'cb__share-card-img' }) : null,
+            React.createElement('div', { className: 'cb__share-card-body' },
+              React.createElement('div', { className: 'cb__share-card-label' }, '📍 Shared a place'),
+              React.createElement('div', { className: 'cb__share-card-title' }, shareName),
+              shareDesc ? React.createElement('div', { className: 'cb__share-card-desc' }, shareDesc) : null
+            )
+          );
+        } else {
+          bubbleContent = m.text;
+        }
+
         return React.createElement('div', { key: m.id, className: 'cb__row' + (isSelf ? ' cb__row--self' : '') },
           !isSelf && renderAvatar(avatarUrl, '#E8933A', ''),
           React.createElement('div', { className: 'cb__bubble-group' + (isSelf ? ' cb__bubble-group--self' : '') },
             React.createElement('span', { className: 'cb__sender' + (isSelf ? ' cb__sender--self' : '') }, isSelf ? userName : (m.userName || m.user)),
-            React.createElement('div', { className: 'cb__bubble' + (isSelf ? ' cb__bubble--self' : '') }, m.text)
+            React.createElement('div', {
+              className: 'cb__bubble' + (isSelf ? ' cb__bubble--self' : '') + (shareMatch ? ' cb__bubble--share' : '')
+            }, bubbleContent),
+            m.time ? React.createElement('span', { className: 'cb__time' + (isSelf ? ' cb__time--self' : '') }, formatMsgTime(m.time)) : null
           ),
           isSelf && renderAvatar(userAvatar, '#3B5F8A', 'cb__avatar--self')
         );

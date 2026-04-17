@@ -8,36 +8,71 @@ const MONTHS = ['January','February','March','April','May','June','July','August
 
 const defaultActivities = [];
 
-const ItineraryBuilder = ({ tripId = null, onSave = null, tripDays = 7 }) => {
+const ItineraryBuilder = ({ tripId = null, groupId = null, onSave = null, tripDays = 7, isActive = false }) => {
   const today = new Date();
   const storageKey = 'itinerary-' + (tripId || 'default');
 
+  // Activities loaded from vote API
+  const [upvotedActivities, setUpvotedActivities] = useState([]);
+  const [savedActivities, setSavedActivities] = useState([]);
+
+  // Re-fetch whenever tab becomes active or groupId changes
+  useEffect(() => {
+    var gid = groupId || tripId;
+    if (!gid || !isActive) return;
+
+    fetch('/api/votes/saved?groupId=' + gid + '&type=upvote')
+      .then(r => r.json())
+      .then(data => {
+        setUpvotedActivities((data || []).map((v, i) => ({
+          id: v.activityId || ('up-' + i),
+          name: v.activityName,
+          desc: (v.activityTags || '').split(',').filter(Boolean).join(', '),
+          color: '#3B5F8A',
+          image: v.activityImage
+        })));
+      })
+      .catch(() => {});
+
+    fetch('/api/votes/saved?groupId=' + gid + '&type=bookmark')
+      .then(r => r.json())
+      .then(data => {
+        setSavedActivities((data || []).map((v, i) => ({
+          id: v.activityId || ('bk-' + i),
+          name: v.activityName,
+          desc: (v.activityTags || '').split(',').filter(Boolean).join(', '),
+          color: '#E8933A',
+          image: v.activityImage
+        })));
+      })
+      .catch(() => {});
+  }, [groupId, tripId, isActive]);
+
   // ── Calendar state (persisted) ────────────────────────────────────────────
-  const [calYear, setCalYear] = useState(() => {
-    const saved = localStorage.getItem(storageKey + '-calYear');
-    return saved ? parseInt(saved) : today.getFullYear();
-  });
+  const [calYear, setCalYear] = useState(today.getFullYear());
+  const [calMonth, setCalMonth] = useState(today.getMonth());
+  const [rangeStart, setRangeStart] = useState(null);
+  const [rangeEnd, setRangeEnd] = useState(null);
 
-  const [calMonth, setCalMonth] = useState(() => {
-    const saved = localStorage.getItem(storageKey + '-calMonth');
-    return saved ? parseInt(saved) : today.getMonth();
-  });
+  // ── Week state ────────────────────────────────────────────────────────────
+  const [activeDay, setActiveDay] = useState(0);
 
-  const [rangeStart, setRangeStart] = useState(() => {
-    const saved = localStorage.getItem(storageKey + '-rangeStart');
-    return saved ? parseInt(saved) : null;
-  });
-
-  const [rangeEnd, setRangeEnd] = useState(() => {
-    const saved = localStorage.getItem(storageKey + '-rangeEnd');
-    return saved ? parseInt(saved) : null;
-  });
-
-  // ── Week state (persisted) ────────────────────────────────────────────────
-  const [activeDay, setActiveDay] = useState(() => {
-    const saved = localStorage.getItem(storageKey + '-activeDay');
-    return saved ? parseInt(saved) : 0;
-  });
+  // ── Load shared dates from DB ─────────────────────────────────────────────
+  useEffect(() => {
+    var gid = groupId || tripId;
+    if (!gid || !isActive) return;
+    fetch('/api/itinerary/dates?groupId=' + gid)
+      .then(r => r.json())
+      .then(data => {
+        if (data && data.rangeStart !== null) {
+          setRangeStart(data.rangeStart);
+          setRangeEnd(data.rangeEnd);
+          setCalYear(data.calYear);
+          setCalMonth(data.calMonth);
+        }
+      })
+      .catch(() => {});
+  }, [groupId, tripId, isActive]);
 
   // Build week days dynamically from selected range
   const weekDays = useMemo(() => {
@@ -54,11 +89,8 @@ const ItineraryBuilder = ({ tripId = null, onSave = null, tripDays = 7 }) => {
     });
   }, [rangeStart, tripDays, calYear, calMonth]);
 
-  // ── Schedule state (persisted) ────────────────────────────────────────────
-  const [allBlocks, setAllBlocks] = useState(() => {
-    const saved = localStorage.getItem(storageKey + '-blocks');
-    return saved ? JSON.parse(saved) : {};
-  });
+  // ── Schedule state (loaded from DB) ──────────────────────────────────────
+  const [allBlocks, setAllBlocks] = useState({});
 
   const dayBlocks = allBlocks[activeDay] || {};
 
@@ -70,23 +102,43 @@ const ItineraryBuilder = ({ tripId = null, onSave = null, tripDays = 7 }) => {
   const [dragInfo, setDragInfo] = useState(null);
   const [overSlot, setOverSlot] = useState(null);
 
-  // ── Persist all state to localStorage ────────────────────────────────────
+  // ── Load blocks from DB on mount / tab activation ─────────────────────────
+  const [hasLoadedBlocks, setHasLoadedBlocks] = useState(false);
   useEffect(() => {
-    if (rangeStart !== null) {
-      localStorage.setItem(storageKey + '-rangeStart', rangeStart);
-      localStorage.setItem(storageKey + '-rangeEnd', rangeEnd);
-      localStorage.setItem(storageKey + '-calYear', calYear);
-      localStorage.setItem(storageKey + '-calMonth', calMonth);
-    }
-  }, [rangeStart, rangeEnd, calYear, calMonth]);
+    var gid = groupId || tripId;
+    if (!gid || !isActive) return;
 
+    fetch('/api/itinerary/blocks?groupId=' + gid)
+      .then(r => r.json())
+      .then(data => {
+        if (!Array.isArray(data)) { setHasLoadedBlocks(true); return; }
+        var loaded = {};
+        data.forEach(function(b) {
+          if (!loaded[b.dayIndex]) loaded[b.dayIndex] = {};
+          loaded[b.dayIndex][b.timeSlot] = { name: b.activityName, color: b.activityColor || '#E8933A' };
+        });
+        setAllBlocks(loaded);
+        setHasLoadedBlocks(true);
+      })
+      .catch(() => { setHasLoadedBlocks(true); });
+  }, [groupId, tripId, isActive]);
+
+  // ── Backup to localStorage (DB saves happen on drop/remove) ───────────────
   useEffect(() => {
+    if (!hasLoadedBlocks) return;
     localStorage.setItem(storageKey + '-blocks', JSON.stringify(allBlocks));
-  }, [allBlocks]);
+  }, [allBlocks, hasLoadedBlocks, storageKey]);
 
+  // ── Save shared dates to DB ────────────────────────────────────────────────
   useEffect(() => {
-    localStorage.setItem(storageKey + '-activeDay', activeDay);
-  }, [activeDay]);
+    var gid = groupId || tripId;
+    if (!gid || rangeStart === null) return;
+    fetch('/api/itinerary/dates', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ groupId: gid, rangeStart, rangeEnd, calYear, calMonth })
+    }).catch(() => {});
+  }, [rangeStart, rangeEnd, calYear, calMonth, groupId, tripId]);
 
   // ── Calendar logic ────────────────────────────────────────────────────────
   const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
@@ -124,12 +176,33 @@ const ItineraryBuilder = ({ tripId = null, onSave = null, tripDays = 7 }) => {
     localStorage.removeItem(storageKey + '-activeDay');
   };
 
+  // Check which day indices have scheduled activities
+  const daysWithBlocks = useMemo(() => {
+    var result = {};
+    for (var dayIdx in allBlocks) {
+      if (Object.keys(allBlocks[dayIdx]).length > 0) {
+        result[dayIdx] = true;
+      }
+    }
+    return result;
+  }, [allBlocks]);
+
+  // Map a calendar date to its day index (0-based from rangeStart)
+  const dateToDayIndex = (d) => {
+    if (rangeStart === null || d < rangeStart || d > rangeEnd) return -1;
+    return d - rangeStart;
+  };
+
   const dayClass = (d) => {
     if (rangeStart === null) return 'ib-cal__day';
-    if (d === rangeStart) return 'ib-cal__day ib-cal__day--start';
-    if (d === rangeEnd) return 'ib-cal__day ib-cal__day--end';
-    if (d > rangeStart && d < rangeEnd) return 'ib-cal__day ib-cal__day--range';
-    return 'ib-cal__day';
+    var cls = 'ib-cal__day';
+    if (d === rangeStart) cls += ' ib-cal__day--start';
+    else if (d === rangeEnd) cls += ' ib-cal__day--end';
+    else if (d > rangeStart && d < rangeEnd) cls += ' ib-cal__day--range';
+    // Add indicator if this day has activities
+    var idx = dateToDayIndex(d);
+    if (idx >= 0 && daysWithBlocks[idx]) cls += ' ib-cal__day--has-plans';
+    return cls;
   };
 
   // Current active day label for schedule title
@@ -140,16 +213,16 @@ const ItineraryBuilder = ({ tripId = null, onSave = null, tripDays = 7 }) => {
 
   // ── Drag from panel ───────────────────────────────────────────────────────
   const panelDragStart = (e, act) => {
-    setDragInfo({ type: 'panel', name: act.name, id: act.id });
+    setDragInfo({ type: 'panel', name: act.name, id: act.id, color: act.color || '#E8933A' });
     e.dataTransfer.effectAllowed = 'move';
     e.dataTransfer.setData('text/plain', act.id);
   };
 
   // ── Drag from schedule ────────────────────────────────────────────────────
   const blockDragStart = (e, timeKey, block) => {
-    setDragInfo({ type: 'block', id: block.id, text: block.text, from: timeKey });
+    setDragInfo({ type: 'block', id: block.id, name: block.name || block.text, from: timeKey });
     e.dataTransfer.effectAllowed = 'move';
-    e.dataTransfer.setData('text/plain', block.id);
+    e.dataTransfer.setData('text/plain', block.id || '');
   };
 
   // ── Drop on slot ──────────────────────────────────────────────────────────
@@ -158,29 +231,69 @@ const ItineraryBuilder = ({ tripId = null, onSave = null, tripDays = 7 }) => {
     setOverSlot(null);
     if (!dragInfo) return;
 
+    var gid = groupId || tripId;
+    var newName = dragInfo.name;
+    var newColor = dragInfo.color || '#E8933A';
+    var fromSlot = dragInfo.type === 'block' ? dragInfo.from : null;
+
     setAllBlocks(prev => {
       const dayData = { ...(prev[activeDay] || {}) };
       if (dragInfo.type === 'panel') {
-        dayData[timeKey] = { id: 'sb-' + Date.now(), text: dragInfo.name };
+        dayData[timeKey] = { id: 'sb-' + Date.now(), name: newName, color: newColor };
       } else if (dragInfo.type === 'block') {
         if (dragInfo.from) delete dayData[dragInfo.from];
-        dayData[timeKey] = { id: dragInfo.id, text: dragInfo.text };
+        dayData[timeKey] = { id: dragInfo.id, name: newName, color: newColor };
       }
       return { ...prev, [activeDay]: dayData };
     });
-    setDragInfo(null);
-  }, [dragInfo, activeDay]);
 
-  const removeBlock = (k) => setAllBlocks(prev => {
-    const dayData = { ...(prev[activeDay] || {}) };
-    delete dayData[k];
-    return { ...prev, [activeDay]: dayData };
-  });
+    // Save to DB
+    if (gid) {
+      // If moving within schedule, delete old slot first
+      if (fromSlot) {
+        fetch('/api/itinerary/block', {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ groupId: gid, dayIndex: activeDay, timeSlot: fromSlot })
+        }).catch(() => {});
+      }
+      fetch('/api/itinerary/block', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          groupId: gid,
+          dayIndex: activeDay,
+          timeSlot: timeKey,
+          activityName: newName,
+          activityColor: newColor
+        })
+      }).catch(() => {});
+    }
+
+    setDragInfo(null);
+  }, [dragInfo, activeDay, groupId, tripId]);
+
+  const removeBlock = (k) => {
+    setAllBlocks(prev => {
+      const dayData = { ...(prev[activeDay] || {}) };
+      delete dayData[k];
+      return { ...prev, [activeDay]: dayData };
+    });
+    var gid = groupId || tripId;
+    if (gid) {
+      fetch('/api/itinerary/block', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ groupId: gid, dayIndex: activeDay, timeSlot: k })
+      }).catch(() => {});
+    }
+  };
 
   // ── Filter activities ─────────────────────────────────────────────────────
-  const filtered = defaultActivities.filter(a =>
+  const currentActivities = panelMode === 'recommend' ? upvotedActivities : savedActivities;
+  const filtered = currentActivities.filter(a =>
     a.name.toLowerCase().includes(search.toLowerCase()) ||
-    a.desc.toLowerCase().includes(search.toLowerCase())
+    (a.desc || '').toLowerCase().includes(search.toLowerCase())
   );
 
   return (
@@ -222,7 +335,7 @@ const ItineraryBuilder = ({ tripId = null, onSave = null, tripDays = 7 }) => {
           <div className="ib-week">
             {weekDays.map((d, i) => (
               <div key={i}
-                className={`ib-week__day${activeDay === i ? ' ib-week__day--active' : ''}`}
+                className={`ib-week__day${activeDay === i ? ' ib-week__day--active' : ''}${daysWithBlocks[i] ? ' ib-week__day--has-plans' : ''}`}
                 onClick={() => setActiveDay(i)}>
                 <span className="ib-week__num">{d.num}</span>
                 <span className="ib-week__label">{d.label}</span>
@@ -246,7 +359,7 @@ const ItineraryBuilder = ({ tripId = null, onSave = null, tripDays = 7 }) => {
                 onDrop={e => slotDrop(e, h)}>
                 {dayBlocks[h] && (
                   <div className="ib-block" draggable onDragStart={e => blockDragStart(e, h, dayBlocks[h])}>
-                    <span className="ib-block__text">{dayBlocks[h].text}</span>
+                    <span className="ib-block__text">{dayBlocks[h].name || dayBlocks[h].text}</span>
                     <button className="ib-block__x" onClick={() => removeBlock(h)}>&times;</button>
                   </div>
                 )}
@@ -275,12 +388,13 @@ const ItineraryBuilder = ({ tripId = null, onSave = null, tripDays = 7 }) => {
           )}
           {filtered.map(a => (
             <div key={a.id} className="ib-act" draggable onDragStart={e => panelDragStart(e, a)}>
-              <div className="ib-act__icon" style={{ backgroundColor: a.color }}></div>
+              <div className="ib-act__icon" style={{ backgroundColor: a.color, overflow: 'hidden' }}>
+                {a.image && <img src={a.image} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '10px' }} />}
+              </div>
               <div className="ib-act__info">
                 <div className="ib-act__name">{a.name}</div>
-                <div className="ib-act__desc">{a.desc} {a.emoji || ''}</div>
+                <div className="ib-act__desc">{a.desc || ''}</div>
               </div>
-              <span className="ib-act__time">{a.time}</span>
             </div>
           ))}
         </div>

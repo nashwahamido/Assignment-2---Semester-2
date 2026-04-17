@@ -8,6 +8,44 @@ const bcrypt = require("bcrypt");
 const nodemailer = require("nodemailer");
 const fileUpload = require("express-fileupload");
 const fs = require("fs");
+const { check, validationResult } = require("express-validator");
+
+// ── Validation Rules ────────────────────────────────────────────────────
+const validationRegisterRules = [
+  check("username")
+    .exists({ checkFalsy: true }).withMessage("Username is required")
+    .isString().withMessage("Username must be a string")
+    .trim()
+    .isLength({ min: 3, max: 20 }).withMessage("Username must be 3–20 characters")
+    .escape(),
+  check("useremail")
+    .exists({ checkFalsy: true }).withMessage("Email is required")
+    .isEmail().withMessage("Invalid email format")
+    .normalizeEmail(),
+  check("userphone")
+    .isMobilePhone().withMessage("Invalid phone number"),
+  check("gender")
+    .optional(),
+  check("psw")
+    .exists({ checkFalsy: true }).withMessage("Password is required")
+    .isLength({ min: 6, max: 12 }).withMessage("Password must be at least 6 characters or a maximum of 12")
+];
+
+const validationVerifyRules = [
+  check(["code1", "code2", "code3", "code4", "code5", "code6"])
+    .exists({ checkFalsy: true }).withMessage("All code fields are required")
+    .isInt().withMessage("Each code must be a number")
+    .isLength({ min: 1, max: 1 }).withMessage("Each code must be a single number")
+    .trim(),
+];
+
+const validationLoginRules = [
+  check("loginemail")
+    .exists({ checkFalsy: true }).withMessage("Email is required")
+    .isEmail().withMessage("Invalid email format"),
+  check("loginpsw")
+    .exists({ checkFalsy: true }).withMessage("Password is required")
+];
 
 const app = express();
 
@@ -40,6 +78,7 @@ const connection = mysql.createPool({
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0,
+  timezone: '+00:00',
 });
 
 connection.getConnection((err, conn) => {
@@ -151,9 +190,21 @@ app.get("/auth/login", (req, res) => {
   res.render("login", { title: "Sign In", error: null, user: null });
 });
 
-app.post("/auth/login", (req, res) => {
+app.post("/auth/login", validationLoginRules, (req, res) => {
+  const errors = validationResult(req);
+  
+  if (!errors.isEmpty()) {
+    return res.render("login", {
+      title: "Sign In",
+      error: errors.array().map(e => e.msg).join(", "),
+      user: null,
+    });
+  }
+
   const username = req.body.loginuser || req.body.loginemail;
   const password = req.body.loginpsw;
+
+  console.log("Login attempt:", { username, passwordLength: password ? password.length : 0, body: Object.keys(req.body) });
 
   if (!username || !password) {
     return res.render("login", {
@@ -173,6 +224,7 @@ app.post("/auth/login", (req, res) => {
       }
 
       if (results.length === 0) {
+        console.log("Login: No user found for:", username);
         return res.render("login", {
           title: "Sign In",
           error: "Invalid username or password. Try again.",
@@ -182,6 +234,7 @@ app.post("/auth/login", (req, res) => {
 
       const user = results[0];
       let match = false;
+      console.log("Login: Found user:", user.username, "email:", user.email, "has password hash:", !!user.password);
 
       try {
         match = await bcrypt.compare(password, user.password);
@@ -192,6 +245,8 @@ app.post("/auth/login", (req, res) => {
       if (!match && password === user.password) {
         match = true;
       }
+
+      console.log("Login: bcrypt match:", match);
 
       if (!match) {
         return res.render("login", {
@@ -236,15 +291,21 @@ app.get("/auth/register", (req, res) => {
   res.render("register", { title: "Register", user: null });
 });
 
-app.post("/auth/register", async (req, res) => {
+app.post("/auth/register", validationRegisterRules, async (req, res) => {
+  const errors = validationResult(req);
+  
+  if (!errors.isEmpty()) {
+    return res.render("register", {
+      title: "Register",
+      error: errors.array().map(e => e.msg).join(", "),
+      user: null,
+    });
+  }
+  
   console.log("New registration:", req.body);
 
   try {
     const { username, useremail, userphone, gender, psw } = req.body;
-
-    if (!username || !useremail || !psw) {
-      return res.status(400).send("Missing required fields");
-    }
 
     connection.query(
       "SELECT IDuser FROM tbl_users WHERE email = ? LIMIT 1",
@@ -322,6 +383,8 @@ app.post("/auth/register", async (req, res) => {
 
 // ── VERIFY ───────────────────────────────────────────────────────────────
 app.get("/auth/verify", (req, res) => {
+  
+
   if (!req.session.pendingVerification) {
     return res.redirect("/auth/register");
   }
@@ -335,7 +398,19 @@ app.get("/auth/verify", (req, res) => {
   });
 });
 
-app.post("/auth/verify", (req, res) => {
+app.post("/auth/verify", validationVerifyRules, (req, res) => {
+  const errors = validationResult(req);
+  
+  if (!errors.isEmpty()) {
+    return res.render("register-step2", {
+      title: "Verify",
+      user: null,
+      email: req.session.pendingVerification?.email || null,
+      error: "Please enter all 6 numbers correctly.",
+      success: null,
+    });
+  }
+
   const pending = req.session.pendingVerification;
 
   if (!pending) {
@@ -482,6 +557,51 @@ app.post("/setup/upload", requireAuth, (req, res) => {
 
         req.session.save(function () {
           res.redirect("/setup/countries");
+        });
+      }
+    );
+  });
+});
+
+// Upload from profile page (redirects back to /profile)
+app.post("/profile/upload", requireAuth, (req, res) => {
+  if (!req.files || !req.files.profilePicture) {
+    return res.redirect("/profile");
+  }
+
+  var file = req.files.profilePicture;
+  var uploadDir = path.join(__dirname, "assets/uploads");
+
+  if (!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir, { recursive: true });
+  }
+
+  var timestamp = new Date().toISOString().replace(/[-:T]/g, "").slice(0, 15);
+  var safeName = file.name.replace(/[^a-zA-Z0-9.\-_]/g, "_");
+  var fileName = timestamp + "_" + safeName;
+  var filePath = path.join(uploadDir, fileName);
+
+  file.mv(filePath, function (err) {
+    if (err) {
+      console.error("File upload error:", err);
+      return res.redirect("/profile");
+    }
+
+    var dbPath = "/uploads/" + fileName;
+
+    connection.query(
+      "UPDATE tbl_users SET profilePictureUrl = ?, profilePictureAlt = ? WHERE IDuser = ?",
+      [dbPath, "Profile picture", req.session.user.id],
+      function (dbErr) {
+        if (dbErr) {
+          console.error("DB update error:", dbErr);
+        } else {
+          req.session.user.profilePictureUrl = dbPath;
+          console.log("Profile picture updated:", dbPath);
+        }
+
+        req.session.save(function () {
+          res.redirect("/profile");
         });
       }
     );
@@ -890,6 +1010,244 @@ app.get("/api/recommendations", requireAuth, async (req, res) => {
 });
 
 
+// ── VOTE API ────────────────────────────────────────────────────────────
+
+app.post("/api/votes", requireAuth, (req, res) => {
+  var userId = req.session.user.id;
+  var userName = req.session.user.username || 'Someone';
+  var { groupId, activityId, activityName, activityImage, activityDesc, activityTags, vote } = req.body;
+  console.log("Vote POST:", { groupId, activityId, activityName: activityName ? activityName.substring(0, 30) : '', vote, userId });
+  if (!groupId || !activityId || !vote) return res.status(400).json({ error: "Missing fields" });
+  var tagsStr = Array.isArray(activityTags) ? activityTags.join(",") : (activityTags || "");
+  connection.query(
+    "INSERT INTO tbl_activity_votes (groupId, userId, activityId, activityName, activityImage, activityDesc, activityTags, `vote`) VALUES (?, ?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE `vote` = ?, activityName = ?, activityImage = ?, activityDesc = ?, activityTags = ?",
+    [groupId, userId, activityId, activityName || "", activityImage || "", activityDesc || "", tagsStr, vote, vote, activityName || "", activityImage || "", activityDesc || "", tagsStr],
+    function(err) {
+      if (err) { console.error("Vote save error:", err.message); return res.status(500).json({ error: "Failed" }); }
+
+      // Create notifications for other group members
+      if (vote !== 'downvote') {
+        var voteLabel = vote === 'upvote' ? 'upvoted' : 'bookmarked';
+        connection.query("SELECT g.name as groupName, gm.userId FROM tbl_group_members gm JOIN tbl_groups g ON g.id = gm.groupId WHERE gm.groupId = ? AND gm.userId != ?",
+          [groupId, userId],
+          function(nErr, members) {
+            if (nErr || !members || members.length === 0) return;
+            var groupName = members[0].groupName;
+            var msg = userName + ' ' + voteLabel + ' "' + (activityName || 'an activity').substring(0, 60) + '"';
+            var values = members.map(function(m) { return [m.userId, groupId, groupName, msg, 'vote']; });
+            connection.query("INSERT INTO tbl_notifications (userId, groupId, groupName, message, type) VALUES ?", [values], function(iErr) {
+              if (iErr) console.error("Notification insert error:", iErr.message);
+              // Emit socket notification to group
+              io.to("group-" + groupId).emit("new-notification", { groupId: groupId, groupName: groupName, message: msg });
+            });
+          }
+        );
+      }
+
+      res.json({ success: true });
+    }
+  );
+});
+
+app.get("/api/votes", requireAuth, (req, res) => {
+  var groupId = req.query.groupId;
+  if (!groupId) return res.json([]);
+  connection.query(
+    "SELECT DISTINCT activityId, activityName, activityImage, activityDesc, activityTags, `vote` FROM tbl_activity_votes WHERE groupId = ?",
+    [groupId],
+    function(err, rows) { res.json(!err && rows ? rows : []); }
+  );
+});
+
+app.get("/api/votes/saved", requireAuth, (req, res) => {
+  var groupId = req.query.groupId;
+  var type = req.query.type;
+  console.log("Vote SAVED GET:", { groupId, type });
+  if (!groupId) return res.json([]);
+  var sql = "SELECT DISTINCT activityId, activityName, activityImage, activityDesc, activityTags, `vote` FROM tbl_activity_votes WHERE groupId = ?";
+  var params = [groupId];
+  if (type === 'upvote' || type === 'bookmark') { sql += " AND `vote` = ?"; params.push(type); }
+  else { sql += " AND `vote` IN ('upvote', 'bookmark')"; }
+  connection.query(sql, params, function(err, rows) {
+    console.log("Vote saved result:", { err: err ? err.message : null, count: rows ? rows.length : 0 });
+    res.json(!err && rows ? rows : []);
+  });
+});
+
+// ── ITINERARY BLOCKS API ─────────────────────────────────────────────────
+
+// Save a single block (upsert)
+app.post("/api/itinerary/block", requireAuth, (req, res) => {
+  var userId = req.session.user.id;
+  var { groupId, dayIndex, timeSlot, activityName, activityColor } = req.body;
+  if (!groupId || dayIndex === undefined || !timeSlot || !activityName) return res.status(400).json({ error: "Missing fields" });
+  connection.query(
+    "INSERT INTO tbl_itinerary_blocks (groupId, dayIndex, timeSlot, activityName, activityColor, updatedBy) VALUES (?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE activityName = ?, activityColor = ?, updatedBy = ?",
+    [groupId, dayIndex, timeSlot, activityName, activityColor || '#E8933A', userId, activityName, activityColor || '#E8933A', userId],
+    function(err) {
+      if (err) { console.error("Block save error:", err.message); return res.status(500).json({ error: "Failed" }); }
+      res.json({ success: true });
+    }
+  );
+});
+
+// Delete a single block
+app.delete("/api/itinerary/block", requireAuth, (req, res) => {
+  var { groupId, dayIndex, timeSlot } = req.body;
+  if (!groupId || dayIndex === undefined || !timeSlot) return res.status(400).json({ error: "Missing fields" });
+  connection.query(
+    "DELETE FROM tbl_itinerary_blocks WHERE groupId = ? AND dayIndex = ? AND timeSlot = ?",
+    [groupId, dayIndex, timeSlot],
+    function(err) {
+      if (err) { console.error("Block delete error:", err.message); return res.status(500).json({ error: "Failed" }); }
+      res.json({ success: true });
+    }
+  );
+});
+
+// Save all blocks for a group (full replace) - kept for compatibility
+app.post("/api/itinerary/blocks", requireAuth, (req, res) => {
+  var userId = req.session.user.id;
+  var { groupId, blocks } = req.body;
+  console.log("Itinerary save:", { groupId, userId, blockCount: blocks ? blocks.length : 0 });
+  if (!groupId) return res.status(400).json({ error: "Missing groupId" });
+
+  // Delete existing blocks for this group, then insert new ones
+  connection.query("DELETE FROM tbl_itinerary_blocks WHERE groupId = ?", [groupId], function(err) {
+    if (err) { console.error("Itinerary delete error:", err.message); return res.status(500).json({ error: "Failed" }); }
+
+    if (!blocks || blocks.length === 0) return res.json({ success: true });
+
+    var values = blocks.map(function(b) {
+      return [groupId, b.dayIndex, b.timeSlot, b.activityName, b.activityColor || '#E8933A', userId];
+    });
+
+    connection.query(
+      "INSERT INTO tbl_itinerary_blocks (groupId, dayIndex, timeSlot, activityName, activityColor, updatedBy) VALUES ?",
+      [values],
+      function(insertErr) {
+        if (insertErr) { console.error("Itinerary insert error:", insertErr.message); return res.status(500).json({ error: "Failed" }); }
+        res.json({ success: true });
+      }
+    );
+  });
+});
+
+// Load blocks for a group
+app.get("/api/itinerary/blocks", requireAuth, (req, res) => {
+  var groupId = req.query.groupId;
+  if (!groupId) return res.json([]);
+  connection.query(
+    "SELECT dayIndex, timeSlot, activityName, activityColor FROM tbl_itinerary_blocks WHERE groupId = ? ORDER BY dayIndex, timeSlot",
+    [groupId],
+    function(err, rows) {
+      res.json(!err && rows ? rows : []);
+    }
+  );
+});
+
+// Save shared date range for a group
+app.post("/api/itinerary/dates", requireAuth, (req, res) => {
+  var { groupId, rangeStart, rangeEnd, calYear, calMonth } = req.body;
+  if (!groupId) return res.status(400).json({ error: "Missing groupId" });
+  connection.query(
+    "INSERT INTO tbl_itinerary_dates (groupId, rangeStart, rangeEnd, calYear, calMonth) VALUES (?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE rangeStart = ?, rangeEnd = ?, calYear = ?, calMonth = ?",
+    [groupId, rangeStart, rangeEnd, calYear, calMonth, rangeStart, rangeEnd, calYear, calMonth],
+    function(err) {
+      if (err) { console.error("Date save error:", err.message); return res.status(500).json({ error: "Failed" }); }
+      res.json({ success: true });
+    }
+  );
+});
+
+// Load shared date range for a group
+app.get("/api/itinerary/dates", requireAuth, (req, res) => {
+  var groupId = req.query.groupId;
+  if (!groupId) return res.json(null);
+  connection.query(
+    "SELECT rangeStart, rangeEnd, calYear, calMonth FROM tbl_itinerary_dates WHERE groupId = ?",
+    [groupId],
+    function(err, rows) {
+      if (!err && rows && rows.length > 0) return res.json(rows[0]);
+      res.json(null);
+    }
+  );
+});
+
+// ── NOTIFICATIONS API ────────────────────────────────────────────────────
+
+// Get notifications for current user
+app.get("/api/notifications", requireAuth, (req, res) => {
+  var userId = req.session.user.id;
+  connection.query(
+    "SELECT id, groupId, groupName, message, type, isRead, createdAt FROM tbl_notifications WHERE userId = ? ORDER BY createdAt DESC LIMIT 50",
+    [userId],
+    function(err, rows) {
+      if (err) { console.error("Notif load error:", err.message); return res.json([]); }
+      // Convert timestamps to ISO and group notifications
+      var notifications = (rows || []).map(function(n) {
+        return { id: n.id, groupId: n.groupId, groupName: n.groupName, message: n.message, type: n.type, isRead: n.isRead, createdAt: n.createdAt ? new Date(n.createdAt).toISOString() : null };
+      });
+      var unreadByGroup = {};
+      notifications.forEach(function(n) {
+        if (!n.isRead) {
+          if (!unreadByGroup[n.groupId]) unreadByGroup[n.groupId] = { count: 0, groupName: n.groupName, groupId: n.groupId };
+          unreadByGroup[n.groupId].count++;
+        }
+      });
+      var summarizedGroups = {};
+      var results = [];
+      notifications.forEach(function(n) {
+        if (!n.isRead && unreadByGroup[n.groupId] && unreadByGroup[n.groupId].count >= 4 && !summarizedGroups[n.groupId]) {
+          summarizedGroups[n.groupId] = true;
+          results.push({ id: n.id, groupId: n.groupId, groupName: n.groupName, message: n.groupName + ' has ' + unreadByGroup[n.groupId].count + ' new votes', type: 'vote-summary', isRead: 0, createdAt: n.createdAt });
+        } else if (!n.isRead && unreadByGroup[n.groupId] && unreadByGroup[n.groupId].count >= 4) {
+          // Skip individual ones for summarized groups
+        } else {
+          results.push(n);
+        }
+      });
+      res.json(results);
+    }
+  );
+});
+
+// Get unread count
+app.get("/api/notifications/count", requireAuth, (req, res) => {
+  var userId = req.session.user.id;
+  connection.query(
+    "SELECT COUNT(*) as cnt FROM tbl_notifications WHERE userId = ? AND isRead = 0",
+    [userId],
+    function(err, rows) {
+      res.json({ count: (!err && rows && rows[0]) ? rows[0].cnt : 0 });
+    }
+  );
+});
+
+// Mark all as read
+app.post("/api/notifications/read", requireAuth, (req, res) => {
+  var userId = req.session.user.id;
+  connection.query("UPDATE tbl_notifications SET isRead = 1 WHERE userId = ?", [userId], function(err) {
+    res.json({ success: !err });
+  });
+});
+
+// Get last active time for a group
+app.get("/api/groups/last-active", requireAuth, (req, res) => {
+  var groupId = req.query.groupId;
+  if (!groupId) return res.json({ lastActive: null });
+  connection.query(
+    "SELECT createdAt, userName FROM tbl_chat_messages WHERE groupId = ? ORDER BY createdAt DESC LIMIT 1",
+    [groupId],
+    function(err, rows) {
+      if (!err && rows && rows.length > 0) {
+        return res.json({ lastActive: new Date(rows[0].createdAt).toISOString(), userName: rows[0].userName });
+      }
+      res.json({ lastActive: null });
+    }
+  );
+});
+
 // ── ERROR HANDLING ───────────────────────────────────────────────────────
 app.use((req, res) => {
   res.status(404).render("error", {
@@ -914,6 +1272,7 @@ const { Server } = require("socket.io");
 
 const server = http.createServer(app);
 const io = new Server(server);
+var roomMembers = {}; // { "group-123": { "userId1": true, ... } }
 
 io.on("connection", function(socket) {
   console.log("Socket connected:", socket.id);
@@ -938,14 +1297,19 @@ io.on("connection", function(socket) {
       }
     );
 
-    socket.to(room).emit("user-joined", { userName: data.userName });
-    console.log(data.userName + " joined room " + room);
+    // Only broadcast "user joined" if they're not already in the room
+    if (!roomMembers[room]) roomMembers[room] = {};
+    if (!roomMembers[room][data.userId]) {
+      roomMembers[room][data.userId] = true;
+      socket.to(room).emit("user-joined", { userName: data.userName });
+      console.log(data.userName + " joined room " + room);
+    }
   });
 
   socket.on("send-message", function(data) {
     var room = "group-" + data.groupId;
     var msgId = Date.now() + "-" + Math.random().toString(36).substr(2, 5);
-    var timeStr = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    var timeStr = new Date().toISOString();
     var msg = {
       id: msgId,
       userId: data.userId,
@@ -970,6 +1334,25 @@ io.on("connection", function(socket) {
 
   socket.on("disconnect", function() {
     console.log("Socket disconnected:", socket.id);
+    if (socket.userData) {
+      var room = "group-" + socket.userData.groupId;
+      if (roomMembers[room] && roomMembers[room][socket.userData.userId]) {
+        // Check if user has any other sockets still in the room
+        var room_sockets = io.sockets.adapter.rooms.get(room);
+        var stillConnected = false;
+        if (room_sockets) {
+          room_sockets.forEach(function(sid) {
+            var s = io.sockets.sockets.get(sid);
+            if (s && s.userData && s.userData.userId === socket.userData.userId && s.id !== socket.id) {
+              stillConnected = true;
+            }
+          });
+        }
+        if (!stillConnected) {
+          delete roomMembers[room][socket.userData.userId];
+        }
+      }
+    }
   });
 });
 
@@ -980,4 +1363,3 @@ server.listen(PORT, function() {
 });
 
 module.exports = app;
-

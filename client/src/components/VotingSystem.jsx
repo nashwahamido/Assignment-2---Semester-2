@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState, useCallback } from "react";
 import "../styles/voting-system.css";
 
 var MAX_VISIBILITY = 2;
@@ -12,13 +12,13 @@ var icons = {
   maybe: "/icons/maybe-icon.svg",
 };
 
-function ActivityCard({ activity, vote, onVote }) {
+function ActivityCard({ activity, vote, onVote, onShare }) {
   return (
     <div className="vote-card">
       <img src={activity.image} alt={activity.name} className="vote-card-image" />
       <div className="vote-card-overlay" />
 
-      <button type="button" className="share-btn" aria-label={"Share " + activity.name}>
+      <button type="button" className="share-btn" onClick={function() { if (onShare) onShare(activity); }} aria-label={"Share " + activity.name} title="Share to group chat">
         <img src={icons.send} alt="" className="share-icon" />
       </button>
 
@@ -142,21 +142,25 @@ function Carousel({ children, active, setActive }) {
   );
 }
 
+
 export default function VotingSystem(props) {
   var destination = props.destination || "Rome";
-  console.log("VotingSystem destination:", destination);
   var groupId = props.groupId || "";
+  var userId = props.userId || "";
+  var userName = props.userName || "";
+  var userAvatar = props.userAvatar || "";
+
   var activeState = useState(0);
   var active = activeState[0];
   var setActive = activeState[1];
 
-  var votesState = useState({});
-  var votes = votesState[0];
-  var setVotes = votesState[1];
-
   var activitiesState = useState([]);
   var activities = activitiesState[0];
   var setActivities = activitiesState[1];
+
+  var votedIdsState = useState({});
+  var votedIds = votedIdsState[0];
+  var setVotedIds = votedIdsState[1];
 
   var loadingState = useState(true);
   var loading = loadingState[0];
@@ -166,25 +170,34 @@ export default function VotingSystem(props) {
   var error = errorState[0];
   var setError = errorState[1];
 
+  var votingState = useState(false);
+  var isVoting = votingState[0];
+  var setIsVoting = votingState[1];
+
+  var feedbackState = useState(null);
+  var feedback = feedbackState[0];
+  var setFeedback = feedbackState[1];
+
   var preferences = useMemo(function () {
     try {
+      var gp = localStorage.getItem("activityPreferences-" + groupId);
+      if (gp) return JSON.parse(gp);
       return JSON.parse(localStorage.getItem("activityPreferences")) || [];
     } catch (e) {
       return [];
     }
-  }, []);
+  }, [groupId]);
 
- useEffect(function () {
-  fetch(
-  "/api/recommendations?city=" +
-    encodeURIComponent(destination) +
-    "&activities=" +
-    encodeURIComponent(preferences.join(","))
-)
+  useEffect(function () {
+    setLoading(true);
+    fetch(
+      "/api/recommendations?city=" +
+        encodeURIComponent(destination) +
+        "&activities=" +
+        encodeURIComponent(preferences.join(","))
+    )
       .then(function (res) {
-        if (!res.ok) {
-          throw new Error("Failed to load recommendations");
-        }
+        if (!res.ok) throw new Error("Failed to load");
         return res.json();
       })
       .then(function (data) {
@@ -198,13 +211,109 @@ export default function VotingSystem(props) {
       });
   }, [preferences, destination]);
 
-  var handleVote = function (activityId, choice) {
-    setVotes(function (prev) {
-      var next = {};
-      for (var k in prev) next[k] = prev[k];
-      next[activityId] = choice;
-      return next;
-    });
+  useEffect(function () {
+    if (!groupId) return;
+    fetch("/api/votes?groupId=" + groupId)
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        var map = {};
+        data.forEach(function (v) { map[v.activityId] = v.vote; });
+        setVotedIds(map);
+      })
+      .catch(function () {});
+  }, [groupId]);
+
+  var visibleActivities = useMemo(function () {
+    return activities.filter(function (a) { return !votedIds[a.id]; });
+  }, [activities, votedIds]);
+
+  var safeActive = visibleActivities.length === 0 ? 0 : Math.min(active, visibleActivities.length - 1);
+
+  var handleVote = function (activity, choice) {
+    if (isVoting || !groupId) return;
+    setIsVoting(true);
+
+    var voteType = choice === "yes" ? "upvote" : choice === "maybe" ? "bookmark" : "downvote";
+    var label = voteType === "upvote" ? "Upvoted" : voteType === "bookmark" ? "Bookmarked" : "Dismissed";
+
+    fetch("/api/votes", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        groupId: groupId,
+        activityId: activity.id,
+        activityName: activity.name,
+        activityImage: activity.image,
+        activityDesc: activity.description || "",
+        activityTags: activity.tags || [],
+        vote: voteType
+      })
+    })
+      .then(function () {
+        setVotedIds(function (prev) {
+          var next = {};
+          for (var k in prev) next[k] = prev[k];
+          next[activity.id] = voteType;
+          return next;
+        });
+
+        setFeedback({ text: label + ": " + activity.name, type: voteType });
+        setTimeout(function () { setFeedback(null); }, 1500);
+
+        setActive(function (prev) {
+          var remaining = visibleActivities.length - 1;
+          if (remaining <= 0) return 0;
+          return Math.min(prev, remaining - 1);
+        });
+
+        setIsVoting(false);
+      })
+      .catch(function () { setIsVoting(false); });
+  };
+
+  // Share activity to group chat via socket
+  var handleShare = function (activity) {
+    if (!groupId) return;
+    if (!window.io) {
+      console.warn('Socket.io not loaded, cannot share');
+      return;
+    }
+    try {
+      // Reuse existing socket connection if possible
+      var socket = window._atlasphereSocket;
+      if (!socket || !socket.connected) {
+        socket = window.io();
+        window._atlasphereSocket = socket;
+        socket.emit('join-group', {
+          groupId: groupId,
+          userId: userId,
+          userName: userName || 'Someone',
+          userAvatar: userAvatar || ''
+        });
+      }
+
+      var sendMsg = function () {
+        var desc = activity.description ? activity.description.substring(0, 120) : '';
+        var payload = '[[SHARE:' + (activity.image || '') + '|' + activity.name + '|' + desc + ']]';
+        socket.emit('send-message', {
+          groupId: groupId,
+          userId: userId,
+          userName: userName || 'Someone',
+          userAvatar: userAvatar || '',
+          text: payload
+        });
+        setFeedback({ text: 'Shared to chat: ' + activity.name, type: 'upvote' });
+        setTimeout(function () { setFeedback(null); }, 2000);
+      };
+
+      if (socket.connected) {
+        sendMsg();
+      } else {
+        socket.once('connect', sendMsg);
+      }
+    } catch (e) {
+      console.error('Share error:', e);
+    }
   };
 
   if (loading) {
@@ -213,7 +322,7 @@ export default function VotingSystem(props) {
         <section className="voting-section">
           <header className="voting-header">
             <h1>Recommended</h1>
-            <p>Loading things to do for your trip...</p>
+            <p>Loading things to do in {destination}...</p>
           </header>
         </section>
       </main>
@@ -233,13 +342,26 @@ export default function VotingSystem(props) {
     );
   }
 
+  if (visibleActivities.length === 0 && activities.length > 0) {
+    return (
+      <main className="voting-page">
+        <section className="voting-section">
+          <header className="voting-header">
+            <h1>All Done!</h1>
+            <p>You've voted on all recommendations. Check the Itinerary tab to see your upvoted and saved activities.</p>
+          </header>
+        </section>
+      </main>
+    );
+  }
+
   if (activities.length === 0) {
     return (
       <main className="voting-page">
         <section className="voting-section">
           <header className="voting-header">
             <h1>Recommended</h1>
-            <p>No recommendations found for this destination yet.</p>
+            <p>No recommendations found for {destination} yet.</p>
           </header>
         </section>
       </main>
@@ -251,23 +373,32 @@ export default function VotingSystem(props) {
       <section className="voting-section">
         <header className="voting-header">
           <h1>Recommended</h1>
-          <p>Vote for things to do based on your group’s interests.</p>
+          <p>Vote on things to do in {destination}. Upvote, bookmark, or dismiss.</p>
         </header>
 
-        <Carousel active={active} setActive={setActive}>
-          {activities.map(function (activity) {
+        {feedback && (
+          <div className={"vote-feedback vote-feedback--" + feedback.type}>{feedback.text}</div>
+        )}
+
+        <Carousel active={safeActive} setActive={setActive}>
+          {visibleActivities.map(function (activity) {
             return (
               <ActivityCard
                 key={activity.id}
                 activity={activity}
-                vote={votes[activity.id]}
+                vote={null}
                 onVote={function (choice) {
-                  handleVote(activity.id, choice);
+                  handleVote(activity, choice);
                 }}
+                onShare={function (a) { handleShare(a); }}
               />
             );
           })}
         </Carousel>
+
+        <div style={{ textAlign: 'center', marginTop: '16px', fontSize: '13px', color: 'var(--text-secondary, #888)' }}>
+          {visibleActivities.length} of {activities.length} remaining
+        </div>
       </section>
     </main>
   );
