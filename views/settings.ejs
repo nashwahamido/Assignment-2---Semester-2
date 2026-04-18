@@ -176,7 +176,7 @@
             </div>
             <div class="form-actions" style="gap:8px;">
               <button type="submit" class="btn-save">Save Name</button>
-              <button type="button" class="btn-action" onclick="hideRenameForm()">Cancel</button>
+             <button type="button" class="btn-save" onclick="submitRename()">Save Name</button>
             </div>
           </form>
         </div>
@@ -408,6 +408,26 @@ function filterCities(query) {
     initLocationGrids();
   });
 });
+
+function submitRename() {
+  var newName = document.getElementById('newGroupName').value.trim();
+  if (!newName || !selectedGroupId) return;
+  fetch('/groups/rename/' + selectedGroupId, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: 'newName=' + encodeURIComponent(newName)
+  }).then(function() {
+    // Update the button text in the list
+    document.querySelectorAll('.group-name-btn').forEach(function(b) {
+      if (b.textContent.trim() === selectedGroupName) {
+        b.textContent = newName;
+        b.closest('.group-row').dataset.name = newName.toLowerCase();
+      }
+    });
+    selectedGroupName = newName;
+    hideRenameForm();
+  });
+}
 
 </script>
 
