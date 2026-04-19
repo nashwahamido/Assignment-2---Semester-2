@@ -8,25 +8,30 @@ const bcrypt = require("bcrypt");
 const nodemailer = require("nodemailer");
 const fileUpload = require("express-fileupload");
 const fs = require("fs");
-const { check, validationResult } = require("express-validator");
+
 
 // ── Validation Rules ────────────────────────────────────────────────────
+const { check, validationResult } = require("express-validator");
+
 const validationRegisterRules = [
   check("username")
+    .trim()
     .exists({ checkFalsy: true }).withMessage("Username is required")
     .isString().withMessage("Username must be a string")
-    .trim()
     .isLength({ min: 3, max: 20 }).withMessage("Username must be 3–20 characters")
     .escape(),
   check("useremail")
+    .trim()
     .exists({ checkFalsy: true }).withMessage("Email is required")
     .isEmail().withMessage("Invalid email format")
     .normalizeEmail(),
   check("userphone")
+    .trim()
     .isMobilePhone().withMessage("Invalid phone number"),
   check("gender")
     .optional(),
   check("psw")
+    .trim()
     .exists({ checkFalsy: true }).withMessage("Password is required")
     .isLength({ min: 6, max: 12 }).withMessage("Password must be at least 6 characters or a maximum of 12")
 ];
@@ -41,11 +46,14 @@ const validationVerifyRules = [
 
 const validationLoginRules = [
   check("loginemail")
+    .trim()
     .exists({ checkFalsy: true }).withMessage("Email is required")
     .isEmail().withMessage("Invalid email format"),
   check("loginpsw")
-    .exists({ checkFalsy: true }).withMessage("Password is required")
+    .trim().exists({ checkFalsy: true }).withMessage("Password is required")
 ];
+
+
 
 const app = express();
 
@@ -1057,11 +1065,12 @@ app.get("/api/votes/saved", requireAuth, (req, res) => {
 // Save a single block (upsert)
 app.post("/api/itinerary/block", requireAuth, (req, res) => {
   var userId = req.session.user.id;
-  var { groupId, dayIndex, timeSlot, activityName, activityColor } = req.body;
+  var { groupId, dayIndex, timeSlot, activityName, activityColor, duration } = req.body;
   if (!groupId || dayIndex === undefined || !timeSlot || !activityName) return res.status(400).json({ error: "Missing fields" });
+  var dur = duration || 1;
   connection.query(
-    "INSERT INTO tbl_itinerary_blocks (groupId, dayIndex, timeSlot, activityName, activityColor, updatedBy) VALUES (?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE activityName = ?, activityColor = ?, updatedBy = ?",
-    [groupId, dayIndex, timeSlot, activityName, activityColor || '#E8933A', userId, activityName, activityColor || '#E8933A', userId],
+    "INSERT INTO tbl_itinerary_blocks (groupId, dayIndex, timeSlot, activityName, activityColor, duration, updatedBy) VALUES (?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE activityName = ?, activityColor = ?, duration = ?, updatedBy = ?",
+    [groupId, dayIndex, timeSlot, activityName, activityColor || '#E8933A', dur, userId, activityName, activityColor || '#E8933A', dur, userId],
     function(err) {
       if (err) { console.error("Block save error:", err.message); return res.status(500).json({ error: "Failed" }); }
       res.json({ success: true });
@@ -1097,11 +1106,11 @@ app.post("/api/itinerary/blocks", requireAuth, (req, res) => {
     if (!blocks || blocks.length === 0) return res.json({ success: true });
 
     var values = blocks.map(function(b) {
-      return [groupId, b.dayIndex, b.timeSlot, b.activityName, b.activityColor || '#E8933A', userId];
+      return [groupId, b.dayIndex, b.timeSlot, b.activityName, b.activityColor || '#E8933A', b.duration || 1, userId];
     });
 
     connection.query(
-      "INSERT INTO tbl_itinerary_blocks (groupId, dayIndex, timeSlot, activityName, activityColor, updatedBy) VALUES ?",
+      "INSERT INTO tbl_itinerary_blocks (groupId, dayIndex, timeSlot, activityName, activityColor, duration, updatedBy) VALUES ?",
       [values],
       function(insertErr) {
         if (insertErr) { console.error("Itinerary insert error:", insertErr.message); return res.status(500).json({ error: "Failed" }); }
@@ -1116,7 +1125,7 @@ app.get("/api/itinerary/blocks", requireAuth, (req, res) => {
   var groupId = req.query.groupId;
   if (!groupId) return res.json([]);
   connection.query(
-    "SELECT dayIndex, timeSlot, activityName, activityColor FROM tbl_itinerary_blocks WHERE groupId = ? ORDER BY dayIndex, timeSlot",
+    "SELECT dayIndex, timeSlot, activityName, activityColor, COALESCE(duration, 1) AS duration FROM tbl_itinerary_blocks WHERE groupId = ? ORDER BY dayIndex, timeSlot",
     [groupId],
     function(err, rows) {
       res.json(!err && rows ? rows : []);
@@ -1222,6 +1231,73 @@ app.get("/api/groups/last-active", requireAuth, (req, res) => {
         return res.json({ lastActive: new Date(rows[0].createdAt).toISOString(), userName: rows[0].userName });
       }
       res.json({ lastActive: null });
+    }
+  );
+});
+
+// ── Invite friend to group (JSON API) ─────────────────────────────────────
+app.post("/api/groups/invite", requireAuth, (req, res) => {
+  var userId = req.session.user.id;
+  var userName = req.session.user.username;
+  var { groupId, query } = req.body;
+  if (!groupId || !query) return res.status(400).json({ error: "Missing groupId or search query" });
+
+  // Try to find user by username or email
+  connection.query(
+    "SELECT IDuser, username, email FROM tbl_users WHERE username = ? OR email = ?",
+    [query.trim(), query.trim()],
+    function(err, rows) {
+      if (err) return res.status(500).json({ error: "Database error" });
+      if (!rows || rows.length === 0) return res.json({ success: false, error: 'No user found matching "' + query + '"' });
+
+      var friend = rows[0];
+      if (String(friend.IDuser) === String(userId)) return res.json({ success: false, error: "You can't invite yourself" });
+
+      // Check if already a member
+      connection.query(
+        "SELECT id FROM tbl_group_members WHERE groupId = ? AND userId = ?",
+        [groupId, friend.IDuser],
+        function(checkErr, checkRows) {
+          if (checkRows && checkRows.length > 0) {
+            return res.json({ success: false, error: friend.username + " is already in this group" });
+          }
+
+          // Add to group
+          connection.query(
+            "INSERT IGNORE INTO tbl_group_members (groupId, userId, username, email) VALUES (?, ?, ?, ?)",
+            [groupId, friend.IDuser, friend.username, friend.email],
+            function(insertErr) {
+              if (insertErr) return res.status(500).json({ error: "Failed to add member" });
+
+              // Send notification
+              var notifMsg = userName + ' added you to a group';
+              connection.query(
+                "INSERT INTO tbl_notifications (userId, groupId, message, type) VALUES (?, ?, ?, ?)",
+                [friend.IDuser, groupId, notifMsg, 'invite'],
+                function() {}
+              );
+
+              return res.json({ success: true, message: friend.username + " has been added!" });
+            }
+          );
+        }
+      );
+    }
+  );
+});
+
+// ── Get invite link for a group ───────────────────────────────────────────
+app.get("/api/groups/invite-link", requireAuth, (req, res) => {
+  var groupId = req.query.groupId;
+  if (!groupId) return res.status(400).json({ error: "Missing groupId" });
+
+  connection.query(
+    "SELECT inviteCode FROM tbl_groups WHERE id = ?",
+    [groupId],
+    function(err, rows) {
+      if (err || !rows || rows.length === 0) return res.status(404).json({ error: "Group not found" });
+      var inviteLink = req.protocol + "://" + req.get("host") + "/groups/join/" + rows[0].inviteCode;
+      res.json({ inviteLink: inviteLink });
     }
   );
 });
@@ -1338,6 +1414,16 @@ const PORT = process.env.PORT || 3000;
 server.listen(PORT, function() {
   console.log("Server running on http://localhost:" + PORT);
   console.log("Socket.io enabled for real-time chat");
+
+  // Auto-migrate: add duration column if it doesn't exist yet
+  connection.query(
+    "ALTER TABLE tbl_itinerary_blocks ADD COLUMN duration FLOAT NOT NULL DEFAULT 1",
+    function(err) {
+      if (err && err.code === 'ER_DUP_FIELDNAME') { /* column already exists, fine */ }
+      else if (err) { console.error("Migration note:", err.message); }
+      else { console.log("Added duration column to tbl_itinerary_blocks"); }
+    }
+  );
 });
 
 module.exports = app;
